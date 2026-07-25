@@ -1,0 +1,26 @@
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.task-list-entete {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--couleur-texte-attenue);
+  margin-bottom: 10px;
+}
+
+.task-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-list-vide {
+  text-align: center;
+  color: var(--couleur-texte-attenue);
+  padding: 32px 0;
+}

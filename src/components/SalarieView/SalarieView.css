@@ -1,0 +1,90 @@
+.salarie-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 18px;
+}
+
+.salarie-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.salarie-date {
+  font-size: 19px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.salarie-saison {
+  color: var(--couleur-texte-attenue);
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.salarie-deconnexion {
+  background: none;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+  white-space: nowrap;
+}
+
+.salarie-compteur {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--couleur-accent);
+}
+
+.salarie-erreur {
+  color: var(--couleur-danger);
+  font-weight: 600;
+}
+
+.salarie-chargement {
+  color: var(--couleur-texte-attenue);
+  text-align: center;
+  padding: 40px 0;
+}
+
+.salarie-observations {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--couleur-bordure);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.salarie-observations-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+}
+
+.salarie-observations-champ {
+  width: 100%;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.salarie-observations-bouton {
+  align-self: flex-end;
+  min-height: var(--hauteur-tap-min);
+  padding: 0 22px;
+  background: var(--couleur-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--rayon);
+  font-size: 15px;
+  font-weight: 600;
+}

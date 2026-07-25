@@ -1,0 +1,53 @@
+.reglage-jours {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.reglage-intro {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.reglage-chargement,
+.reglage-vide {
+  color: var(--couleur-texte-attenue);
+}
+
+.reglage-erreur {
+  color: var(--couleur-danger);
+  font-weight: 600;
+}
+
+.reglage-carte {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 14px;
+  background: var(--couleur-carte);
+}
+
+.reglage-libelle {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.reglage-jours-cases {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.reglage-jour-case {
+  min-height: 40px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 8px;
+  background: var(--couleur-fond);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.reglage-jour-case.actif {
+  background: var(--couleur-accent);
+  border-color: var(--couleur-accent);
+  color: #fff;
+}
