@@ -1,0 +1,77 @@
+.gestion-comptes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.comptes-intro {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.comptes-chargement {
+  color: var(--couleur-texte-attenue);
+}
+
+.compte-carte {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 14px;
+  background: var(--couleur-carte);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compte-role {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--couleur-texte-attenue);
+}
+
+.compte-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.compte-champ input {
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 0 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.compte-erreur {
+  color: var(--couleur-danger);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.compte-succes {
+  color: var(--couleur-accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.compte-bouton {
+  min-height: var(--hauteur-tap-min);
+  border: none;
+  border-radius: var(--rayon);
+  background: var(--couleur-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  align-self: flex-start;
+  padding: 0 18px;
+}
+
+.compte-bouton:disabled {
+  opacity: 0.6;
+}

@@ -15,6 +15,7 @@ import { buildDailyTaskList, toDateKey, getTachesOubliees } from '../../lib/cale
 import { CONDITIONS, CONDITION_LABELS, PERIODES, PERIODE_LABELS } from '../../lib/constants'
 import Historique from '../Historique/Historique'
 import GestionTaches from '../GestionTaches/GestionTaches'
+import GestionComptes from '../GestionComptes/GestionComptes'
 import './EmployeurView.css'
 
 export default function EmployeurView({ employe, onDeconnexion }) {
@@ -140,6 +141,9 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         <button className={onglet === 'reglages' ? 'actif' : ''} onClick={() => setOnglet('reglages')}>
           Réglages
         </button>
+        <button className={onglet === 'comptes' ? 'actif' : ''} onClick={() => setOnglet('comptes')}>
+          Comptes
+        </button>
       </nav>
 
       {erreur && <p className="employeur-erreur">{erreur}</p>}
@@ -230,6 +234,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
 
       {onglet === 'historique' && <Historique />}
       {onglet === 'reglages' && <GestionTaches />}
+      {onglet === 'comptes' && <GestionComptes />}
     </div>
   )
 }

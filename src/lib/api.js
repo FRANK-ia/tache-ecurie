@@ -31,6 +31,12 @@ export async function verifierPin(employeId, pin) {
   return unwrap(res)
 }
 
+/** Écriture sur un compte (prénom affiché sur l'écran de connexion, PIN). */
+export async function updateEmploye(employeId, champs) {
+  const res = await supabase.from('employes').update(champs).eq('id', employeId)
+  return unwrap(res)
+}
+
 // ---- Templates de tâches ----
 
 /** Templates actifs uniquement — pour tout calcul des tâches du jour courant (salarié, oubliées). */
@@ -58,6 +64,16 @@ export async function fetchTemplatesToutes() {
  */
 export async function updateTemplate(templateId, champs) {
   const res = await supabase.from('task_templates').update(champs).eq('id', templateId)
+  return unwrap(res)
+}
+
+/** Crée une nouvelle tâche récurrente (toujours actif=true à la création). */
+export async function insertTemplate(champs) {
+  const res = await supabase
+    .from('task_templates')
+    .insert({ centre_id: CENTRE_ID, actif: true, ...champs })
+    .select()
+    .single()
   return unwrap(res)
 }
 
