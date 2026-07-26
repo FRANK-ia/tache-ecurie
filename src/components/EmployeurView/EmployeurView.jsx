@@ -96,7 +96,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         libelle: nouvellePonctuelle.libelle.trim(),
         periode: nouvellePonctuelle.periode,
         jour: jourKey,
-        employeId: employe.id,
+        creePar: employe.id,
       })
       setNouvellePonctuelle({ libelle: '', periode: 'matin' })
       await charger()
@@ -215,7 +215,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                     <li key={obs.id} className="employeur-observation">
                       <p className="employeur-observation-texte">{obs.texte}</p>
                       <p className="employeur-observation-meta">
-                        {obs.employes?.prenom} · {new Date(obs.created_at).toLocaleString('fr-FR')}
+                        {obs.employes?.prenom} · {new Date(obs.cree_le).toLocaleString('fr-FR')}
                       </p>
                       <button className="employeur-observation-lu" onClick={() => marquerLue(obs.id)} disabled={enCours}>
                         Marquer comme lu

@@ -100,10 +100,10 @@ export async function fetchPonctuellesDuJour(jour) {
   return unwrap(res)
 }
 
-export async function insertPonctuelle({ libelle, periode, jour, employeId }) {
+export async function insertPonctuelle({ libelle, periode, jour, creePar }) {
   const res = await supabase
     .from('task_ponctuelles')
-    .insert({ centre_id: CENTRE_ID, libelle, periode, jour, employe_id: employeId })
+    .insert({ centre_id: CENTRE_ID, libelle, periode, jour, cree_par: creePar })
     .select()
     .single()
   return unwrap(res)
@@ -170,10 +170,10 @@ export async function desactiverCondition(jour, condition) {
 
 // ---- Observations ----
 
-export async function insertObservation({ employeId, texte }) {
+export async function insertObservation({ employeId, texte, jour }) {
   const res = await supabase
     .from('observations')
-    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, lu: false })
+    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, jour, lu: false })
     .select()
     .single()
   return unwrap(res)
@@ -185,7 +185,7 @@ export async function fetchObservationsNonLues() {
     .select('*, employes(prenom)')
     .eq('centre_id', CENTRE_ID)
     .eq('lu', false)
-    .order('created_at', { ascending: false })
+    .order('cree_le', { ascending: false })
   return unwrap(res)
 }
 
@@ -196,14 +196,11 @@ export async function marquerObservationLue(id) {
 
 /** Observations créées un jour donné ('YYYY-MM-DD'), pour l'historique (§6.3). */
 export async function fetchObservationsPourDate(jour) {
-  const debut = `${jour}T00:00:00`
-  const finExclusive = new Date(new Date(`${jour}T00:00:00`).getTime() + 86400000).toISOString()
   const res = await supabase
     .from('observations')
     .select('*, employes(prenom)')
     .eq('centre_id', CENTRE_ID)
-    .gte('created_at', debut)
-    .lt('created_at', finExclusive)
-    .order('created_at', { ascending: false })
+    .eq('jour', jour)
+    .order('cree_le', { ascending: false })
   return unwrap(res)
 }

@@ -95,7 +95,7 @@ export default function SalarieView({ employe, onDeconnexion }) {
     if (!observation.trim()) return
     setEnCours(true)
     try {
-      await insertObservation({ employeId: employe.id, texte: observation.trim() })
+      await insertObservation({ employeId: employe.id, texte: observation.trim(), jour: jourKey })
       setObservation('')
       setObservationEnvoyee(true)
       setTimeout(() => setObservationEnvoyee(false), 3000)
