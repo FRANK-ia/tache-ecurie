@@ -1,0 +1,136 @@
+.gestion-taches {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.gestion-intro {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.gestion-chargement,
+.gestion-vide {
+  color: var(--couleur-texte-attenue);
+}
+
+.gestion-erreur {
+  color: var(--couleur-danger);
+  font-weight: 600;
+}
+
+.gestion-groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gestion-groupe-entete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--couleur-texte-attenue);
+}
+
+.gestion-carte {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 14px;
+  background: var(--couleur-carte);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gestion-carte.inactif {
+  opacity: 0.55;
+}
+
+.gestion-carte-entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gestion-libelle-champ {
+  flex: 1;
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.gestion-actif-bouton {
+  min-height: var(--hauteur-tap-min);
+  padding: 0 12px;
+  border-radius: var(--rayon);
+  border: 1px solid var(--couleur-danger);
+  background: #fff;
+  color: var(--couleur-danger);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.gestion-actif-bouton.inactif {
+  border-color: var(--couleur-accent);
+  color: var(--couleur-accent);
+}
+
+.gestion-statut {
+  font-size: 13px;
+  color: var(--couleur-danger);
+  font-weight: 600;
+}
+
+.gestion-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.gestion-champ select {
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 0 10px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--couleur-texte);
+  background: #fff;
+}
+
+.gestion-recurrence {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.gestion-jours-cases {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.gestion-jour-case {
+  min-height: 40px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 8px;
+  background: var(--couleur-fond);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.gestion-jour-case.actif {
+  background: var(--couleur-accent);
+  border-color: var(--couleur-accent);
+  color: #fff;
+}

@@ -33,26 +33,31 @@ export async function verifierPin(employeId, pin) {
 
 // ---- Templates de tâches ----
 
+/** Templates actifs uniquement — pour tout calcul des tâches du jour courant (salarié, oubliées). */
 export async function fetchTemplates() {
-  const res = await supabase.from('task_templates').select('*').eq('centre_id', CENTRE_ID).order('ordre')
-  return unwrap(res)
-}
-
-export async function fetchTemplatesAvecJoursSemaine() {
   const res = await supabase
     .from('task_templates')
     .select('*')
     .eq('centre_id', CENTRE_ID)
-    .not('jours_semaine', 'is', null)
+    .eq('actif', true)
     .order('ordre')
   return unwrap(res)
 }
 
-export async function updateJoursSemaine(templateId, joursSemaine) {
-  const res = await supabase
-    .from('task_templates')
-    .update({ jours_semaine: joursSemaine })
-    .eq('id', templateId)
+/** Tous les templates (actifs et inactifs) — pour l'historique et l'écran de gestion employeur. */
+export async function fetchTemplatesToutes() {
+  const res = await supabase.from('task_templates').select('*').eq('centre_id', CENTRE_ID).order('ordre')
+  return unwrap(res)
+}
+
+/**
+ * Écriture générique sur un template (libellé, période, jours, actif...). Seul point
+ * d'entrée en écriture sur task_templates — jamais de DELETE (§ gestion des tâches
+ * employeur : désactiver via actif=false plutôt que supprimer, pour préserver
+ * l'historique des task_completions qui référencent le template).
+ */
+export async function updateTemplate(templateId, champs) {
+  const res = await supabase.from('task_templates').update(champs).eq('id', templateId)
   return unwrap(res)
 }
 

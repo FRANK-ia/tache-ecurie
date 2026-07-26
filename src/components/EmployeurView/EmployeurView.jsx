@@ -14,7 +14,7 @@ import {
 import { buildDailyTaskList, toDateKey, getTachesOubliees } from '../../lib/calendarLogic'
 import { CONDITIONS, CONDITION_LABELS, PERIODES, PERIODE_LABELS } from '../../lib/constants'
 import Historique from '../Historique/Historique'
-import ReglageJours from '../ReglageJours/ReglageJours'
+import GestionTaches from '../GestionTaches/GestionTaches'
 import './EmployeurView.css'
 
 export default function EmployeurView({ employe, onDeconnexion }) {
@@ -229,7 +229,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         ))}
 
       {onglet === 'historique' && <Historique />}
-      {onglet === 'reglages' && <ReglageJours />}
+      {onglet === 'reglages' && <GestionTaches />}
     </div>
   )
 }

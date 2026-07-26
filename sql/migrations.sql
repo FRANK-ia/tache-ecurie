@@ -42,3 +42,8 @@ values (
   'hebdo',
   '{}'
 );
+
+-- 4. Colonne actif sur task_templates (écran de gestion des tâches employeur). Une tâche
+-- qu'on ne veut plus = actif=false, jamais un DELETE (les task_completions passées
+-- référencent le template). Toutes les tâches existantes démarrent actives.
+alter table task_templates add column if not exists actif boolean not null default true;

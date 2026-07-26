@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchTemplates,
+  fetchTemplatesToutes,
   fetchPonctuellesDuJour,
   fetchCompletionsDuJour,
   fetchConditionsDuJour,
@@ -24,7 +24,12 @@ export default function Historique() {
       setChargement(true)
       setErreur('')
       try {
-        const templates = await fetchTemplates()
+        const toutesTemplates = await fetchTemplatesToutes()
+        // Un template désactivé n'est retiré que des jours FUTURS (§ gestion des tâches
+        // employeur) : pour le présent on applique le filtre actif, mais l'historique des
+        // jours passés doit rester fidèle à ce qui était réellement attendu ce jour-là.
+        const estAujourdhui = dateChoisie === toDateKey(new Date())
+        const templates = estAujourdhui ? toutesTemplates.filter((t) => t.actif) : toutesTemplates
         const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
         const [ponctuelles, completions, conditions, dernieresCompletions, obs] = await Promise.all([
           fetchPonctuellesDuJour(dateChoisie),
