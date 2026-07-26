@@ -5,8 +5,9 @@
   align-items: center;
   gap: 14px;
   padding: 14px 12px;
-  background: var(--couleur-carte);
+  background: var(--couleur-periode-fond, var(--couleur-carte));
   border: 1px solid var(--couleur-bordure);
+  border-left: 4px solid var(--couleur-periode-bordure, var(--couleur-bordure));
   border-radius: var(--rayon);
   text-align: left;
 }

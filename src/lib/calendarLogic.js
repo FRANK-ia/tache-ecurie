@@ -29,6 +29,19 @@ export function toDateKey(date) {
   return `${y}-${m}-${d}`
 }
 
+/**
+ * Vrai si `date` est un jour non travaillé pour le centre : repos hebdomadaire fixe
+ * (`joursRepos`, tableau ISO 1=lundi..7=dimanche, ex {7} pour dimanche) OU compris dans
+ * une plage de `conges` ({ date_debut, date_fin } au format 'YYYY-MM-DD').
+ * V1 mono-salarié : un jour non travaillé = écran vide côté salarié, pas de gestion de
+ * remplaçant, aucune completion fantôme générée.
+ */
+export function estJourNonTravaille(date, joursRepos = [], conges = []) {
+  if (joursRepos.includes(isoDayOfWeek(date))) return true
+  const jour = toDateKey(date)
+  return conges.some((c) => jour >= c.date_debut && jour <= c.date_fin)
+}
+
 /** Nombre de jours entre deux clés 'YYYY-MM-DD' (b - a), en ignorant l'heure. */
 export function daysBetweenDateKeys(aKey, bKey) {
   const a = new Date(`${aKey}T00:00:00Z`)

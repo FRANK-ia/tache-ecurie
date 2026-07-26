@@ -1,4 +1,4 @@
-import { PERIODES, PERIODE_LABELS, PERIODE_ICONS } from '../../lib/constants'
+import { PERIODES, PERIODE_LABELS, PERIODE_ICONS, PERIODE_COULEURS } from '../../lib/constants'
 import TaskItem from './TaskItem'
 import './TaskList.css'
 
@@ -14,21 +14,28 @@ export default function TaskList({ taches, onToggle, disabled }) {
 
   return (
     <div className="task-list">
-      {parPeriode.map((groupe) => (
-        <section key={groupe.periode} className="task-list-groupe">
-          <h2 className="task-list-entete">
-            <span className="task-list-icone" aria-hidden="true">
-              {PERIODE_ICONS[groupe.periode]}
-            </span>
-            {PERIODE_LABELS[groupe.periode]}
-          </h2>
-          <div className="task-list-items">
-            {groupe.taches.map((tache) => (
-              <TaskItem key={`${tache.kind}-${tache.id}`} task={tache} onToggle={onToggle} disabled={disabled} />
-            ))}
-          </div>
-        </section>
-      ))}
+      {parPeriode.map((groupe) => {
+        const couleurs = PERIODE_COULEURS[groupe.periode]
+        return (
+          <section
+            key={groupe.periode}
+            className="task-list-groupe"
+            style={{ '--couleur-periode-fond': couleurs?.fond, '--couleur-periode-bordure': couleurs?.bordure }}
+          >
+            <h2 className="task-list-entete">
+              <span className="task-list-icone" aria-hidden="true">
+                {PERIODE_ICONS[groupe.periode]}
+              </span>
+              {PERIODE_LABELS[groupe.periode]}
+            </h2>
+            <div className="task-list-items">
+              {groupe.taches.map((tache) => (
+                <TaskItem key={`${tache.kind}-${tache.id}`} task={tache} onToggle={onToggle} disabled={disabled} />
+              ))}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }

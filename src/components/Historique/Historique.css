@@ -31,7 +31,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--couleur-texte-attenue);
+  color: var(--couleur-periode-bordure, var(--couleur-texte-attenue));
   margin-bottom: 8px;
 }
 
@@ -53,8 +53,9 @@
   font-size: 15px;
   padding: 8px 10px;
   border-radius: var(--rayon);
-  background: var(--couleur-carte);
+  background: var(--couleur-periode-fond, var(--couleur-carte));
   border: 1px solid var(--couleur-bordure);
+  border-left: 4px solid var(--couleur-periode-bordure, var(--couleur-bordure));
 }
 
 .historique-liste li.faite {

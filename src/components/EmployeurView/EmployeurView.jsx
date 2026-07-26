@@ -5,17 +5,20 @@ import {
   fetchCompletionsDuJour,
   fetchConditionsDuJour,
   fetchDernieresCompletionsIntervalle,
+  fetchJoursRepos,
+  fetchConges,
   activerCondition,
   desactiverCondition,
   insertPonctuelle,
   fetchObservationsNonLues,
   marquerObservationLue,
 } from '../../lib/api'
-import { buildDailyTaskList, toDateKey, getTachesOubliees } from '../../lib/calendarLogic'
+import { buildDailyTaskList, toDateKey, getTachesOubliees, estJourNonTravaille } from '../../lib/calendarLogic'
 import { CONDITIONS, CONDITION_LABELS, PERIODES, PERIODE_LABELS } from '../../lib/constants'
 import Historique from '../Historique/Historique'
 import GestionTaches from '../GestionTaches/GestionTaches'
 import GestionComptes from '../GestionComptes/GestionComptes'
+import GestionRepos from '../GestionRepos/GestionRepos'
 import './EmployeurView.css'
 
 export default function EmployeurView({ employe, onDeconnexion }) {
@@ -35,7 +38,11 @@ export default function EmployeurView({ employe, onDeconnexion }) {
     setChargement(true)
     setErreur('')
     try {
-      const templates = await fetchTemplates()
+      const [templates, joursRepos, conges] = await Promise.all([
+        fetchTemplates(),
+        fetchJoursRepos(),
+        fetchConges(),
+      ])
       const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
       const [ponctuelles, completions, conditions, dernieresCompletions, obs] = await Promise.all([
         fetchPonctuellesDuJour(jourKey),
@@ -53,7 +60,8 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         lastCompletionByTemplateId: dernieresCompletions,
       })
       setConditionsActives(conditions)
-      setTachesOubliees(getTachesOubliees(liste))
+      // Pas d'oubliées un jour de repos/congé — personne n'est censé être sur place.
+      setTachesOubliees(estJourNonTravaille(aujourdhui, joursRepos, conges) ? [] : getTachesOubliees(liste))
       setObservations(obs)
     } catch (e) {
       setErreur(e.message)
@@ -143,6 +151,9 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         </button>
         <button className={onglet === 'comptes' ? 'actif' : ''} onClick={() => setOnglet('comptes')}>
           Comptes
+        </button>
+        <button className={onglet === 'repos' ? 'actif' : ''} onClick={() => setOnglet('repos')}>
+          Repos
         </button>
       </nav>
 
@@ -235,6 +246,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
       {onglet === 'historique' && <Historique />}
       {onglet === 'reglages' && <GestionTaches />}
       {onglet === 'comptes' && <GestionComptes />}
+      {onglet === 'repos' && <GestionRepos />}
     </div>
   )
 }

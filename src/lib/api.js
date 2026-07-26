@@ -10,8 +10,8 @@ function unwrap({ data, error }) {
 }
 
 /**
- * Tri centralisé des templates : période (rang explicite matin→midi→journee→soir→
- * gardiennage, jamais alphabétique) puis `ordre` numérique croissant à l'intérieur.
+ * Tri centralisé des templates : période (rang explicite matin→midi→journee→soir,
+ * jamais alphabétique) puis `ordre` numérique croissant à l'intérieur.
  * `ordre` est la séquence de travail opérationnelle définie à l'insertion en base —
  * ne jamais la retrier autrement (alphabétique, id, date...).
  */
@@ -239,5 +239,42 @@ export async function fetchObservationsPourDate(jour) {
     .eq('centre_id', CENTRE_ID)
     .eq('jour', jour)
     .order('cree_le', { ascending: false })
+  return unwrap(res)
+}
+
+// ---- Jours non travaillés (repos hebdomadaire + congés) ----
+
+/** Jours de repos hebdo du centre (tableau ISO, 1=lundi..7=dimanche). */
+export async function fetchJoursRepos() {
+  const res = await supabase.from('centres').select('jours_repos').eq('id', CENTRE_ID).single()
+  return unwrap(res).jours_repos ?? []
+}
+
+export async function updateJoursRepos(joursRepos) {
+  const res = await supabase.from('centres').update({ jours_repos: joursRepos }).eq('id', CENTRE_ID)
+  return unwrap(res)
+}
+
+/** Toutes les plages de congés du centre — le filtrage passé/à venir se fait côté appelant. */
+export async function fetchConges() {
+  const res = await supabase.from('jours_conges').select('*').eq('centre_id', CENTRE_ID).order('date_debut')
+  return unwrap(res)
+}
+
+export async function insertConge({ dateDebut, dateFin, motif }) {
+  const res = await supabase
+    .from('jours_conges')
+    .insert({ centre_id: CENTRE_ID, date_debut: dateDebut, date_fin: dateFin, motif: motif || null })
+    .select()
+    .single()
+  return unwrap(res)
+}
+
+/**
+ * Seul DELETE de toute l'app : les congés sont un réglage ponctuel, pas une donnée
+ * d'historique métier référencée ailleurs (contrairement à task_templates/task_completions).
+ */
+export async function supprimerConge(id) {
+  const res = await supabase.from('jours_conges').delete().eq('id', id)
   return unwrap(res)
 }

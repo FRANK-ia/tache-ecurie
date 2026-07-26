@@ -1,15 +1,16 @@
 // Constantes métier ajustables. Valeurs par défaut à valider avec Frank (voir §11 du brief).
 
 // Ordre canonique des périodes (utilisé pour le tri et le regroupement partout dans
-// l'app) : matin → midi → journee → soir → gardiennage. Ne pas trier alphabétiquement.
-export const PERIODES = ['matin', 'midi', 'journee', 'soir', 'gardiennage']
+// l'app) : matin → midi → journee → soir. Ne pas trier alphabétiquement.
+// ⚠️ 'gardiennage' n'est PAS une période : c'est une condition activable (comme le
+// gel), voir CONDITIONS plus bas. Ne pas la réintroduire ici.
+export const PERIODES = ['matin', 'midi', 'journee', 'soir']
 
 export const PERIODE_LABELS = {
   matin: 'Matin',
   midi: 'Midi',
   journee: 'Dans la journée',
   soir: 'Soir',
-  gardiennage: 'Gardiennage',
 }
 
 // Icônes des en-têtes de période (§7 — regroupement par période). 'journee' regroupe les
@@ -19,7 +20,17 @@ export const PERIODE_ICONS = {
   midi: '☀️',
   journee: '🌤️',
   soir: '🌇',
-  gardiennage: '🌙',
+}
+
+// Code couleur discret par période (liseré + fond très pâle), partout où les tâches
+// sont groupées par période. Teintes volontairement distinctes des autres signaux
+// existants (accent vert, danger rouge, météo orange-brun, fraîcheur bleu marine) pour
+// qu'ils restent visuellement prioritaires quand ils se superposent.
+export const PERIODE_COULEURS = {
+  matin: { fond: '#fdf6e3', bordure: '#c99a1e' },
+  midi: { fond: '#e6f5f3', bordure: '#3f9c90' },
+  journee: { fond: '#f2edfa', bordure: '#8a6bbf' },
+  soir: { fond: '#fbebf0', bordure: '#c4718f' },
 }
 
 // Détermine la saison utilisée pour l'horaire du soir affiché (§6.2).
@@ -39,7 +50,6 @@ export const HEURE_FIN_PERIODE = {
   midi: 14,
   journee: 24,
   soir: 21,
-  gardiennage: 24,
 }
 
 export const CONDITIONS = ['pluie', 'gel', 'grandgel', 'gardiennage']

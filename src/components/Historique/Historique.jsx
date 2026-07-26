@@ -8,7 +8,7 @@ import {
   fetchObservationsPourDate,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey } from '../../lib/calendarLogic'
-import { PERIODES, PERIODE_LABELS, PERIODE_ICONS, CONDITION_EMOJIS } from '../../lib/constants'
+import { PERIODES, PERIODE_LABELS, PERIODE_ICONS, PERIODE_COULEURS, CONDITION_EMOJIS } from '../../lib/constants'
 import './Historique.css'
 
 export default function Historique() {
@@ -85,28 +85,35 @@ export default function Historique() {
       ) : (
         <>
           {parPeriode.length === 0 && <p className="historique-vide">Aucune tâche attendue ce jour-là.</p>}
-          {parPeriode.map((groupe) => (
-            <section key={groupe.periode} className="historique-groupe">
-              <h3 className="historique-entete">
-                <span className="historique-icone" aria-hidden="true">
-                  {PERIODE_ICONS[groupe.periode]}
-                </span>
-                {PERIODE_LABELS[groupe.periode]}
-              </h3>
-              <ul className="historique-liste">
-                {groupe.taches.map((t) => (
-                  <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>
-                    <span className="historique-marque">{t.fait ? '✓' : '✗'}</span>{' '}
-                    {CONDITION_EMOJIS[t.condition] && (
-                      <span aria-hidden="true">{CONDITION_EMOJIS[t.condition]} </span>
-                    )}
-                    {t.libelle}
-                    {t.kind === 'ponctuelle' && <span className="historique-badge">ajout</span>}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {parPeriode.map((groupe) => {
+            const couleurs = PERIODE_COULEURS[groupe.periode]
+            return (
+              <section
+                key={groupe.periode}
+                className="historique-groupe"
+                style={{ '--couleur-periode-fond': couleurs?.fond, '--couleur-periode-bordure': couleurs?.bordure }}
+              >
+                <h3 className="historique-entete">
+                  <span className="historique-icone" aria-hidden="true">
+                    {PERIODE_ICONS[groupe.periode]}
+                  </span>
+                  {PERIODE_LABELS[groupe.periode]}
+                </h3>
+                <ul className="historique-liste">
+                  {groupe.taches.map((t) => (
+                    <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>
+                      <span className="historique-marque">{t.fait ? '✓' : '✗'}</span>{' '}
+                      {CONDITION_EMOJIS[t.condition] && (
+                        <span aria-hidden="true">{CONDITION_EMOJIS[t.condition]} </span>
+                      )}
+                      {t.libelle}
+                      {t.kind === 'ponctuelle' && <span className="historique-badge">ajout</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          })}
 
           <section className="historique-groupe">
             <h3 className="historique-entete">Observations</h3>

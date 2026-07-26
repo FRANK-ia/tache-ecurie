@@ -1,0 +1,138 @@
+.gestion-repos {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.repos-chargement {
+  color: var(--couleur-texte-attenue);
+}
+
+.repos-erreur {
+  color: var(--couleur-danger);
+  font-weight: 600;
+}
+
+.repos-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.repos-section-titre {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--couleur-texte-attenue);
+}
+
+.repos-intro {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+  margin-top: -6px;
+}
+
+.repos-jours-cases {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.repos-jour-case {
+  min-height: 44px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 8px;
+  background: var(--couleur-fond);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.repos-jour-case.actif {
+  background: var(--couleur-accent);
+  border-color: var(--couleur-accent);
+  color: #fff;
+}
+
+.repos-conge-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.repos-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.repos-champ input {
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 0 10px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--couleur-texte);
+}
+
+.repos-conge-bouton {
+  min-height: var(--hauteur-tap-min);
+  border: none;
+  border-radius: var(--rayon);
+  background: var(--couleur-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.repos-conge-bouton:disabled {
+  opacity: 0.6;
+}
+
+.repos-vide {
+  color: var(--couleur-texte-attenue);
+}
+
+.repos-conges-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.repos-conge-carte {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 12px;
+  background: var(--couleur-carte);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.repos-conge-dates {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.repos-conge-motif {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.repos-conge-retirer {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: none;
+  border: 1px solid var(--couleur-danger);
+  color: var(--couleur-danger);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}

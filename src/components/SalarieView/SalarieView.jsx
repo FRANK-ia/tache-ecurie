@@ -5,17 +5,20 @@ import {
   fetchCompletionsDuJour,
   fetchConditionsDuJour,
   fetchDernieresCompletionsIntervalle,
+  fetchJoursRepos,
+  fetchConges,
   cocherTache,
   decocherTache,
   insertObservation,
 } from '../../lib/api'
-import { buildDailyTaskList, toDateKey, getSaison } from '../../lib/calendarLogic'
+import { buildDailyTaskList, toDateKey, getSaison, estJourNonTravaille } from '../../lib/calendarLogic'
 import { HORAIRE_SOIR } from '../../lib/constants'
 import TaskList from '../TaskList/TaskList'
 import './SalarieView.css'
 
 export default function SalarieView({ employe, onDeconnexion }) {
   const [taches, setTaches] = useState([])
+  const [repos, setRepos] = useState(false)
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState('')
   const [enCours, setEnCours] = useState(false)
@@ -30,6 +33,14 @@ export default function SalarieView({ employe, onDeconnexion }) {
     setChargement(true)
     setErreur('')
     try {
+      const [joursRepos, conges] = await Promise.all([fetchJoursRepos(), fetchConges()])
+      if (estJourNonTravaille(aujourdhui, joursRepos, conges)) {
+        setRepos(true)
+        setTaches([])
+        return
+      }
+      setRepos(false)
+
       const templates = await fetchTemplates()
       const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
       const [ponctuelles, completions, conditions, dernieresCompletions] = await Promise.all([
@@ -125,7 +136,7 @@ export default function SalarieView({ employe, onDeconnexion }) {
         </button>
       </header>
 
-      {total > 0 && (
+      {!repos && total > 0 && (
         <p className="salarie-compteur">
           {faites}/{total} faites
         </p>
@@ -135,26 +146,30 @@ export default function SalarieView({ employe, onDeconnexion }) {
 
       {chargement ? (
         <p className="salarie-chargement">Chargement des tâches…</p>
+      ) : repos ? (
+        <p className="salarie-repos">Jour de repos — aucune tâche aujourd'hui.</p>
       ) : (
-        <TaskList taches={taches} onToggle={toggle} disabled={enCours} />
-      )}
+        <>
+          <TaskList taches={taches} onToggle={toggle} disabled={enCours} />
 
-      <form className="salarie-observations" onSubmit={envoyerObservation}>
-        <label htmlFor="observation" className="salarie-observations-label">
-          Observation pour l'employeur
-        </label>
-        <textarea
-          id="observation"
-          className="salarie-observations-champ"
-          value={observation}
-          onChange={(e) => setObservation(e.target.value)}
-          placeholder="Un cheval boiteux, du matériel cassé…"
-          rows={3}
-        />
-        <button type="submit" className="salarie-observations-bouton" disabled={enCours || !observation.trim()}>
-          {observationEnvoyee ? 'Envoyé ✓' : 'Envoyer'}
-        </button>
-      </form>
+          <form className="salarie-observations" onSubmit={envoyerObservation}>
+            <label htmlFor="observation" className="salarie-observations-label">
+              Observation pour l'employeur
+            </label>
+            <textarea
+              id="observation"
+              className="salarie-observations-champ"
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              placeholder="Un cheval boiteux, du matériel cassé…"
+              rows={3}
+            />
+            <button type="submit" className="salarie-observations-bouton" disabled={enCours || !observation.trim()}>
+              {observationEnvoyee ? 'Envoyé ✓' : 'Envoyer'}
+            </button>
+          </form>
+        </>
+      )}
     </div>
   )
 }

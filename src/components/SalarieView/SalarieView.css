@@ -52,6 +52,14 @@
   padding: 40px 0;
 }
 
+.salarie-repos {
+  color: var(--couleur-texte-attenue);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 60px 0;
+}
+
 .salarie-observations {
   margin-top: auto;
   padding-top: 20px;

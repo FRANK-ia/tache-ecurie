@@ -11,6 +11,7 @@ import {
   buildDailyTaskList,
   getTachesOubliees,
   statutFraicheur,
+  estJourNonTravaille,
 } from './calendarLogic'
 
 describe('isoDayOfWeek', () => {
@@ -40,6 +41,42 @@ describe('toDateKey / daysBetweenDateKeys', () => {
   })
   it('calcule un écart de jours', () => {
     expect(daysBetweenDateKeys('2026-07-01', '2026-07-16')).toBe(15)
+  })
+})
+
+describe('estJourNonTravaille', () => {
+  it('jour de repos hebdo (dimanche par défaut)', () => {
+    const dimanche = new Date(2026, 6, 26)
+    expect(estJourNonTravaille(dimanche, [7], [])).toBe(true)
+  })
+
+  it("jour hors repos hebdo et hors congé -> travaillé", () => {
+    const lundi = new Date(2026, 6, 20)
+    expect(estJourNonTravaille(lundi, [7], [])).toBe(false)
+  })
+
+  it('repos hebdo déplacé au lundi (réglage employeur)', () => {
+    const lundi = new Date(2026, 6, 20)
+    const dimanche = new Date(2026, 6, 26)
+    expect(estJourNonTravaille(lundi, [1], [])).toBe(true)
+    expect(estJourNonTravaille(dimanche, [1], [])).toBe(false)
+  })
+
+  it('jour compris dans une plage de congés', () => {
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }]
+    expect(estJourNonTravaille(new Date(2026, 7, 10), [7], conges)).toBe(true)
+    expect(estJourNonTravaille(new Date(2026, 7, 1), [7], conges)).toBe(true)
+    expect(estJourNonTravaille(new Date(2026, 7, 15), [7], conges)).toBe(true)
+  })
+
+  it('jour hors plage de congés (bornes exclues de justesse)', () => {
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }]
+    expect(estJourNonTravaille(new Date(2026, 6, 31), [], conges)).toBe(false)
+    expect(estJourNonTravaille(new Date(2026, 7, 16), [], conges)).toBe(false)
+  })
+
+  it('aucun repos ni congé configuré -> toujours travaillé', () => {
+    expect(estJourNonTravaille(new Date(2026, 6, 26), [], [])).toBe(false)
   })
 })
 
