@@ -7,7 +7,7 @@ export default function TaskItem({ task, onToggle, disabled }) {
 
   return (
     <button
-      className={`task-item ${task.fait ? 'task-item-fait' : ''} ${estConditionnelle ? 'task-item-meteo' : ''}`}
+      className={`task-item ${task.fait ? 'task-item-fait' : ''} ${estConditionnelle ? 'task-item-meteo' : ''} ${task.fraicheur ? 'task-item-fraiche' : ''}`}
       onClick={() => onToggle(task)}
       disabled={disabled}
     >
@@ -16,6 +16,9 @@ export default function TaskItem({ task, onToggle, disabled }) {
         {emoji && <span aria-hidden="true">{emoji} </span>}
         {task.libelle}
       </span>
+      {task.fraicheur && (
+        <span className="task-item-badge-fraicheur">{task.fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}</span>
+      )}
       {task.kind === 'ponctuelle' && <span className="task-item-badge">ajout</span>}
     </button>
   )

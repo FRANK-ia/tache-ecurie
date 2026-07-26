@@ -10,6 +10,7 @@ import {
   isTaskDone,
   buildDailyTaskList,
   getTachesOubliees,
+  statutFraicheur,
 } from './calendarLogic'
 
 describe('isoDayOfWeek', () => {
@@ -188,6 +189,41 @@ describe('isTaskDone / buildDailyTaskList', () => {
 
     const libellesMatin = result.filter((t) => t.periode === 'matin').map((t) => t.libelle)
     expect(libellesMatin).toEqual(sequenceMatin)
+  })
+})
+
+describe('statutFraicheur', () => {
+  const maintenant = new Date(2026, 6, 26, 12, 0, 0)
+
+  it('pas de modifie_le -> null', () => {
+    expect(statutFraicheur({}, maintenant)).toBe(null)
+  })
+
+  it('créée il y a moins de 48h et jamais modifiée depuis -> nouveau', () => {
+    const creeLe = new Date(2026, 6, 25, 10, 0, 0).toISOString()
+    expect(statutFraicheur({ cree_le: creeLe, modifie_le: creeLe }, maintenant)).toBe('nouveau')
+  })
+
+  it('modifiée il y a moins de 48h, longtemps après sa création -> modifie', () => {
+    const creeLe = new Date(2026, 5, 1, 10, 0, 0).toISOString()
+    const modifieLe = new Date(2026, 6, 25, 10, 0, 0).toISOString()
+    expect(statutFraicheur({ cree_le: creeLe, modifie_le: modifieLe }, maintenant)).toBe('modifie')
+  })
+
+  it('modifiée il y a plus de 48h -> null (le style redevient normal)', () => {
+    const modifieLe = new Date(2026, 6, 20, 10, 0, 0).toISOString()
+    expect(statutFraicheur({ cree_le: modifieLe, modifie_le: modifieLe }, maintenant)).toBe(null)
+  })
+
+  it('exactement à la limite des 48h -> null (borne exclusive)', () => {
+    const modifieLe = new Date(maintenant.getTime() - 48 * 60 * 60 * 1000).toISOString()
+    expect(statutFraicheur({ cree_le: modifieLe, modifie_le: modifieLe }, maintenant)).toBe(null)
+  })
+
+  it('écart cree_le/modifie_le de 2 minutes -> modifie, pas nouveau', () => {
+    const creeLe = new Date(2026, 6, 25, 10, 0, 0).toISOString()
+    const modifieLe = new Date(2026, 6, 25, 10, 2, 0).toISOString()
+    expect(statutFraicheur({ cree_le: creeLe, modifie_le: modifieLe }, maintenant)).toBe('modifie')
   })
 })
 

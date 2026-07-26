@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchTemplatesToutes, updateTemplate, insertTemplate } from '../../lib/api'
+import { statutFraicheur } from '../../lib/calendarLogic'
 import {
   PERIODES,
   PERIODE_LABELS,
@@ -380,9 +381,16 @@ export default function GestionTaches() {
           {groupe.templates.map((template) => {
             const enCours = enregistrement === template.id
             const aJoursMultiples = template.jours_semaine !== null && template.jours_semaine !== undefined
+            const fraicheur = statutFraicheur(template)
 
             return (
-              <div key={template.id} className={`gestion-carte ${template.actif ? '' : 'inactif'}`}>
+              <div
+                key={template.id}
+                className={`gestion-carte ${template.actif ? '' : 'inactif'} ${fraicheur ? 'fraiche' : ''}`}
+              >
+                {fraicheur && (
+                  <span className="gestion-badge-fraicheur">{fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}</span>
+                )}
                 <div className="gestion-carte-entete">
                   <textarea
                     ref={autoResize}

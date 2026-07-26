@@ -2,7 +2,13 @@
 // au réseau ou à l'horloge système directement (la date est toujours un paramètre),
 // ce qui les rend testables en isolation.
 
-import { MOIS_DEBUT_ETE, MOIS_FIN_ETE, HEURE_FIN_PERIODE } from './constants'
+import {
+  MOIS_DEBUT_ETE,
+  MOIS_FIN_ETE,
+  HEURE_FIN_PERIODE,
+  DUREE_FRAICHEUR_HEURES,
+  SEUIL_NOUVEAU_MINUTES,
+} from './constants'
 
 /** 1 = lundi ... 7 = dimanche (contrairement à Date#getDay qui donne 0 = dimanche). */
 export function isoDayOfWeek(date) {
@@ -94,6 +100,22 @@ export function getTasksForDay(templates, date, activeConditions = [], lastCompl
   )
 }
 
+/**
+ * Alerte "nouveau/modifié" (§ task_templates.cree_le / modifie_le) : 'nouveau' si créé
+ * il y a moins de 48h ET jamais modifié depuis (modifie_le ≈ cree_le, écart < 1 min),
+ * 'modifie' si modifié il y a moins de 48h, sinon null (pas de mise en évidence).
+ */
+export function statutFraicheur(template, maintenant = new Date()) {
+  if (!template?.modifie_le) return null
+  const modifie = new Date(template.modifie_le)
+  const heuresEcoulees = (maintenant - modifie) / (1000 * 60 * 60)
+  if (heuresEcoulees >= DUREE_FRAICHEUR_HEURES) return null
+  if (!template.cree_le) return 'modifie'
+  const cree = new Date(template.cree_le)
+  const ecartCreationMinutes = Math.abs(modifie - cree) / (1000 * 60)
+  return ecartCreationMinutes < SEUIL_NOUVEAU_MINUTES ? 'nouveau' : 'modifie'
+}
+
 /** Une tâche (template ou ponctuelle) est faite aujourd'hui si une completion existe. */
 export function isTaskDone(task, completions) {
   return completions.some((c) =>
@@ -121,6 +143,7 @@ export function buildDailyTaskList({
       periode: t.periode,
       ordre: t.ordre ?? 0,
       condition: t.condition ?? null,
+      fraicheur: statutFraicheur(t),
     })
   )
 

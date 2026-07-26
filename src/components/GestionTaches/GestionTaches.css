@@ -50,6 +50,22 @@
   opacity: 0.55;
 }
 
+.gestion-carte.fraiche {
+  background: var(--couleur-nouveau-fond);
+  border-color: var(--couleur-nouveau);
+  box-shadow: inset 4px 0 0 var(--couleur-nouveau);
+}
+
+.gestion-badge-fraicheur {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--couleur-nouveau);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
 .gestion-carte-entete {
   display: flex;
   align-items: center;

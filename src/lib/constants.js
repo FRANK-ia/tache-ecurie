@@ -61,3 +61,7 @@ export const CONDITION_EMOJIS = {
 }
 
 export const JOURS_SEMAINE_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+
+// Alerte visuelle "nouveau/modifié" sur les tâches récurrentes (task_templates).
+export const DUREE_FRAICHEUR_HEURES = 48
+export const SEUIL_NOUVEAU_MINUTES = 1

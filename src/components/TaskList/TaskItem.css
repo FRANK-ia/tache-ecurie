@@ -57,3 +57,19 @@
   border-radius: 999px;
   padding: 3px 9px;
 }
+
+.task-item-fraiche {
+  background: var(--couleur-nouveau-fond);
+  border-color: var(--couleur-nouveau);
+  box-shadow: inset 4px 0 0 var(--couleur-nouveau);
+}
+
+.task-item-badge-fraicheur {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--couleur-nouveau);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
