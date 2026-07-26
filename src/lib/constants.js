@@ -49,4 +49,13 @@ export const CONDITION_LABELS = {
   gardiennage: 'Gardiennage',
 }
 
+// Emoji préfixé devant le libellé des tâches conditionnelles (dérivé de
+// task_templates.condition, jamais saisi dans le libellé stocké en base).
+export const CONDITION_EMOJIS = {
+  pluie: '☔',
+  gel: '❄️',
+  grandgel: '🌩️',
+  gardiennage: '🌙',
+}
+
 export const JOURS_SEMAINE_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
