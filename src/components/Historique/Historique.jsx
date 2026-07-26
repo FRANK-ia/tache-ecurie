@@ -86,7 +86,7 @@ export default function Historique() {
               <ul className="historique-liste">
                 {groupe.taches.map((t) => (
                   <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>
-                    <span>{t.fait ? '✓' : '—'}</span> {t.libelle}
+                    <span className="historique-marque">{t.fait ? '✓' : '✗'}</span> {t.libelle}
                     {t.kind === 'ponctuelle' && <span className="historique-badge">ajout</span>}
                   </li>
                 ))}

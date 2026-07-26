@@ -33,7 +33,7 @@ export const CONDITIONS = ['pluie', 'gel', 'grandgel', 'gardiennage']
 export const CONDITION_LABELS = {
   pluie: 'Pluie',
   gel: 'Gel',
-  grandgel: 'Grand gel',
+  grandgel: 'Orage',
   gardiennage: 'Gardiennage',
 }
 

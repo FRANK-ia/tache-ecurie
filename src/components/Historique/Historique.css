@@ -57,6 +57,18 @@
   font-weight: 600;
 }
 
+.historique-marque {
+  font-weight: 700;
+}
+
+.historique-liste li.faite .historique-marque {
+  color: var(--couleur-accent);
+}
+
+.historique-liste li.non-faite .historique-marque {
+  color: var(--couleur-danger);
+}
+
 .historique-badge {
   margin-left: 8px;
   font-size: 11px;
