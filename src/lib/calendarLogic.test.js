@@ -166,4 +166,16 @@ describe('getTachesOubliees', () => {
     const result = getTachesOubliees(list, midi)
     expect(result.map((t) => t.id)).toEqual([1])
   })
+
+  it('une tâche "journee" (rouleau, herse) n\'est jamais en retard à midi', () => {
+    const list = [{ id: 1, periode: 'journee', fait: false }]
+    const midi = new Date(2026, 6, 20, 13, 0)
+    expect(getTachesOubliees(list, midi)).toEqual([])
+  })
+
+  it('une tâche "journee" reste tolérée même tard le soir (échéance = fin de journée)', () => {
+    const list = [{ id: 1, periode: 'journee', fait: false }]
+    const tresTard = new Date(2026, 6, 20, 23, 30)
+    expect(getTachesOubliees(list, tresTard)).toEqual([])
+  })
 })

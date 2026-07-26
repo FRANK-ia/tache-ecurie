@@ -28,6 +28,12 @@
 
 .reglage-libelle {
   font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.reglage-periode {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
   margin-bottom: 10px;
 }
 

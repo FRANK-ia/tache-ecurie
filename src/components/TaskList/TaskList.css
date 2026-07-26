@@ -5,12 +5,20 @@
 }
 
 .task-list-entete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--couleur-texte-attenue);
   margin-bottom: 10px;
+}
+
+.task-list-icone {
+  font-size: 16px;
+  text-transform: none;
 }
 
 .task-list-items {

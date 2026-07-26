@@ -8,7 +8,7 @@ import {
   fetchObservationsPourDate,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey } from '../../lib/calendarLogic'
-import { PERIODES, PERIODE_LABELS } from '../../lib/constants'
+import { PERIODES, PERIODE_LABELS, PERIODE_ICONS } from '../../lib/constants'
 import './Historique.css'
 
 export default function Historique() {
@@ -82,7 +82,12 @@ export default function Historique() {
           {parPeriode.length === 0 && <p className="historique-vide">Aucune tâche attendue ce jour-là.</p>}
           {parPeriode.map((groupe) => (
             <section key={groupe.periode} className="historique-groupe">
-              <h3 className="historique-entete">{PERIODE_LABELS[groupe.periode]}</h3>
+              <h3 className="historique-entete">
+                <span className="historique-icone" aria-hidden="true">
+                  {PERIODE_ICONS[groupe.periode]}
+                </span>
+                {PERIODE_LABELS[groupe.periode]}
+              </h3>
               <ul className="historique-liste">
                 {groupe.taches.map((t) => (
                   <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>

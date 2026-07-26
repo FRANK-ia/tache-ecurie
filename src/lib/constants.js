@@ -1,12 +1,23 @@
 // Constantes métier ajustables. Valeurs par défaut à valider avec Frank (voir §11 du brief).
 
-export const PERIODES = ['matin', 'midi', 'soir', 'gardiennage']
+export const PERIODES = ['matin', 'midi', 'soir', 'journee', 'gardiennage']
 
 export const PERIODE_LABELS = {
   matin: 'Matin',
   midi: 'Midi',
   soir: 'Soir',
+  journee: 'Dans la journée',
   gardiennage: 'Gardiennage',
+}
+
+// Icônes des en-têtes de période (§7 — regroupement par période). 'journee' regroupe les
+// tâches sans horaire fixe (rouleau, herse) : icône neutre, distincte du soleil de midi.
+export const PERIODE_ICONS = {
+  matin: '🌅',
+  midi: '☀️',
+  soir: '🌇',
+  journee: '🌤️',
+  gardiennage: '🌙',
 }
 
 // Détermine la saison utilisée pour l'horaire du soir affiché (§6.2).
@@ -25,6 +36,7 @@ export const HEURE_FIN_PERIODE = {
   matin: 12,
   midi: 14,
   soir: 21,
+  journee: 24,
   gardiennage: 24,
 }
 
