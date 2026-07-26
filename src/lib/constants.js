@@ -1,12 +1,14 @@
 // Constantes métier ajustables. Valeurs par défaut à valider avec Frank (voir §11 du brief).
 
-export const PERIODES = ['matin', 'midi', 'soir', 'journee', 'gardiennage']
+// Ordre canonique des périodes (utilisé pour le tri et le regroupement partout dans
+// l'app) : matin → midi → journee → soir → gardiennage. Ne pas trier alphabétiquement.
+export const PERIODES = ['matin', 'midi', 'journee', 'soir', 'gardiennage']
 
 export const PERIODE_LABELS = {
   matin: 'Matin',
   midi: 'Midi',
-  soir: 'Soir',
   journee: 'Dans la journée',
+  soir: 'Soir',
   gardiennage: 'Gardiennage',
 }
 
@@ -15,8 +17,8 @@ export const PERIODE_LABELS = {
 export const PERIODE_ICONS = {
   matin: '🌅',
   midi: '☀️',
-  soir: '🌇',
   journee: '🌤️',
+  soir: '🌇',
   gardiennage: '🌙',
 }
 
@@ -35,8 +37,8 @@ export const HORAIRE_SOIR = {
 export const HEURE_FIN_PERIODE = {
   matin: 12,
   midi: 14,
-  soir: 21,
   journee: 24,
+  soir: 21,
   gardiennage: 24,
 }
 

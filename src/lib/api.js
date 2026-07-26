@@ -2,10 +2,26 @@
 // calendarLogic.js — ce fichier ne fait que lire/écrire les tables décrites au §3 du brief.
 
 import { supabase, CENTRE_ID } from '../supabaseClient'
+import { PERIODES } from './constants'
 
 function unwrap({ data, error }) {
   if (error) throw new Error(error.message)
   return data
+}
+
+/**
+ * Tri centralisé des templates : période (rang explicite matin→midi→journee→soir→
+ * gardiennage, jamais alphabétique) puis `ordre` numérique croissant à l'intérieur.
+ * `ordre` est la séquence de travail opérationnelle définie à l'insertion en base —
+ * ne jamais la retrier autrement (alphabétique, id, date...).
+ */
+function trierParPeriodeEtOrdre(templates) {
+  return [...templates].sort((a, b) => {
+    const rangA = PERIODES.indexOf(a.periode)
+    const rangB = PERIODES.indexOf(b.periode)
+    if (rangA !== rangB) return (rangA === -1 ? PERIODES.length : rangA) - (rangB === -1 ? PERIODES.length : rangB)
+    return (a.ordre ?? 0) - (b.ordre ?? 0)
+  })
 }
 
 // ---- Employés / connexion PIN (§5 — pas de sécurité forte, contrôle d'usage) ----
@@ -47,13 +63,13 @@ export async function fetchTemplates() {
     .eq('centre_id', CENTRE_ID)
     .eq('actif', true)
     .order('ordre')
-  return unwrap(res)
+  return trierParPeriodeEtOrdre(unwrap(res))
 }
 
 /** Tous les templates (actifs et inactifs) — pour l'historique et l'écran de gestion employeur. */
 export async function fetchTemplatesToutes() {
   const res = await supabase.from('task_templates').select('*').eq('centre_id', CENTRE_ID).order('ordre')
-  return unwrap(res)
+  return trierParPeriodeEtOrdre(unwrap(res))
 }
 
 /**

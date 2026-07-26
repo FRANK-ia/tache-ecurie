@@ -134,11 +134,17 @@ export default function GestionTaches() {
     if (!libelle) return
     setAjoutErreur('')
 
+    // ordre = dernier de SA période + 1, pour que la tâche apparaisse en fin de sa
+    // période (jamais en tête par défaut à cause d'un ordre 0/null).
+    const ordreMaxDeLaPeriode = Math.max(
+      0,
+      ...templates.filter((t) => t.periode === nouvelleTache.periode).map((t) => t.ordre ?? 0)
+    )
     const champs = {
       libelle,
       periode: nouvelleTache.periode,
       recurrence: nouvelleTache.recurrence,
-      ordre: Math.max(0, ...templates.map((t) => t.ordre ?? 0)) + 1,
+      ordre: ordreMaxDeLaPeriode + 1,
       jour_semaine: null,
       jours_semaine: null,
       jours_mois: null,

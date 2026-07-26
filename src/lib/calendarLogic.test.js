@@ -153,6 +153,42 @@ describe('isTaskDone / buildDailyTaskList', () => {
     expect(result.find((t) => t.id === 't1').fait).toBe(false)
     expect(result.find((t) => t.id === 'p1').kind).toBe('ponctuelle')
   })
+
+  it("respecte l'ordre opérationnel exact du matin même si des tâches d'autres " +
+    "périodes ont un ordre qui s'entrelace (écran salarié)", () => {
+    const sequenceMatin = [
+      '4x4',
+      'chiennes',
+      'tableau',
+      'box',
+      'parc du bas',
+      'foin/filets',
+      'parcs',
+      'matelas',
+      'renfermer chiennes',
+    ]
+    const templatesMatin = sequenceMatin.map((libelle, index) => ({
+      id: `matin-${index}`,
+      recurrence: 'quotidienne',
+      libelle,
+      periode: 'matin',
+      ordre: index + 1,
+    }))
+    // Tâches d'autres périodes avec des valeurs d'ordre qui s'entrelacent avec celles du matin.
+    const templatesAutres = [
+      { id: 'soir-1', recurrence: 'quotidienne', libelle: 'Fermer', periode: 'soir', ordre: 1 },
+      { id: 'soir-2', recurrence: 'quotidienne', libelle: 'Éteindre', periode: 'soir', ordre: 4 },
+      { id: 'midi-1', recurrence: 'quotidienne', libelle: 'Vérifier eau', periode: 'midi', ordre: 2 },
+    ]
+
+    const result = buildDailyTaskList({
+      templates: [...templatesMatin, ...templatesAutres],
+      date: new Date(),
+    })
+
+    const libellesMatin = result.filter((t) => t.periode === 'matin').map((t) => t.libelle)
+    expect(libellesMatin).toEqual(sequenceMatin)
+  })
 })
 
 describe('getTachesOubliees', () => {
