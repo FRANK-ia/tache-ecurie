@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { fetchTemplatesToutes, updateTemplate, insertTemplate } from '../../lib/api'
+import {
+  fetchTemplatesToutes,
+  updateTemplate,
+  insertTemplate,
+  compterCompletions,
+  supprimerTemplateSiPossible,
+} from '../../lib/api'
 import { statutFraicheur } from '../../lib/calendarLogic'
 import { PERIODES, PERIODE_COULEURS, BADGE_COULEURS, CONDITIONS } from '../../lib/constants'
 import { T, formatTexte } from '../../lib/textes'
@@ -40,9 +46,7 @@ function familleDe(template) {
   return template.recurrence === 'conditionnelle' ? `conditionnelle:${template.condition}` : template.recurrence
 }
 
-const NOUVELLE_TACHE_VIDE = {
-  libelle: '',
-  periode: 'matin',
+const RECURRENCE_VIDE = {
   recurrence: 'quotidienne',
   modeHebdo: 'unique',
   jourUnique: 1,
@@ -50,6 +54,180 @@ const NOUVELLE_TACHE_VIDE = {
   joursMoisTexte: '',
   condition: 'pluie',
   intervalleJours: 15,
+}
+
+const NOUVELLE_TACHE_VIDE = {
+  libelle: '',
+  periode: 'matin',
+  ...RECURRENCE_VIDE,
+}
+
+/**
+ * Déduit un brouillon éditable {recurrence, modeHebdo, jourUnique, joursRouleau,
+ * joursMoisTexte, condition, intervalleJours} à partir des colonnes réelles d'un
+ * template existant — pour pré-remplir l'éditeur de récurrence avec ses valeurs
+ * actuelles (§ AJOUT 3).
+ */
+function brouillonDepuisTemplate(template) {
+  const modeHebdo = template.jours_semaine !== null && template.jours_semaine !== undefined ? 'rouleau' : 'unique'
+  return {
+    recurrence: template.recurrence,
+    modeHebdo,
+    jourUnique: template.jour_semaine ?? 1,
+    joursRouleau: template.jours_semaine ?? [],
+    joursMoisTexte: (template.jours_mois ?? []).join(', '),
+    condition: template.condition ?? 'pluie',
+    intervalleJours: template.intervalle_jours ?? 15,
+  }
+}
+
+/**
+ * Traduit un brouillon de récurrence en colonnes task_templates, en remettant à null
+ * tous les champs des AUTRES types de récurrence (§ AJOUT 3 : ne pas laisser de champs
+ * orphelins incohérents en changeant de récurrence). Renvoie { champs } ou { erreur }.
+ * Partagé entre la création d'une tâche et l'édition de la récurrence d'une tâche
+ * existante — même logique, même validation, à un seul endroit.
+ */
+function construireChampsRecurrence(brouillon) {
+  const champs = {
+    recurrence: brouillon.recurrence,
+    jour_semaine: null,
+    jours_semaine: null,
+    jours_mois: null,
+    condition: null,
+    intervalle_jours: null,
+  }
+
+  if (brouillon.recurrence === 'hebdo') {
+    if (brouillon.modeHebdo === 'unique') {
+      champs.jour_semaine = brouillon.jourUnique
+    } else if (brouillon.joursRouleau.length === 0) {
+      return { erreur: T.reglages.erreurRouleauVide }
+    } else {
+      champs.jours_semaine = brouillon.joursRouleau
+    }
+  } else if (brouillon.recurrence === 'mensuelle') {
+    const jours = brouillon.joursMoisTexte
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 31)
+    if (jours.length === 0) return { erreur: T.reglages.erreurJoursMoisInvalides }
+    champs.jours_mois = jours
+  } else if (brouillon.recurrence === 'conditionnelle') {
+    champs.condition = brouillon.condition
+  } else if (brouillon.recurrence === 'intervalle') {
+    const n = parseInt(brouillon.intervalleJours, 10)
+    if (!Number.isInteger(n) || n < 1) return { erreur: T.reglages.erreurIntervalleInvalide }
+    champs.intervalle_jours = n
+  }
+
+  return { champs }
+}
+
+/** Éditeur de récurrence — identique pour la création d'une tâche et la modification
+ * de la récurrence d'une tâche existante (§ AJOUT 3), seule la valeur pré-remplie change. */
+function ChampsRecurrence({ valeur, onChange }) {
+  return (
+    <>
+      <label className="gestion-champ">
+        {T.reglages.champRecurrence}
+        <select value={valeur.recurrence} onChange={(e) => onChange({ recurrence: e.target.value })}>
+          {Object.keys(T.familles).map((r) => (
+            <option key={r} value={r}>
+              {T.familles[r]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {valeur.recurrence === 'hebdo' && (
+        <>
+          <label className="gestion-champ">
+            {T.reglages.champTypeJour}
+            <select value={valeur.modeHebdo} onChange={(e) => onChange({ modeHebdo: e.target.value })}>
+              <option value="unique">{T.reglages.optionJourUnique}</option>
+              <option value="rouleau">{T.reglages.optionRouleau}</option>
+            </select>
+          </label>
+
+          {valeur.modeHebdo === 'unique' ? (
+            <label className="gestion-champ">
+              {T.reglages.champJour}
+              <select
+                value={valeur.jourUnique}
+                onChange={(e) => onChange({ jourUnique: Number(e.target.value) })}
+              >
+                {T.jours.noms.map((nom, index) => (
+                  <option key={index + 1} value={index + 1}>
+                    {nom}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className="gestion-jours-cases">
+              {T.jours.abreviations.map((label, index) => {
+                const jourIso = index + 1
+                return (
+                  <button
+                    type="button"
+                    key={jourIso}
+                    className={`gestion-jour-case ${valeur.joursRouleau.includes(jourIso) ? 'actif' : ''}`}
+                    onClick={() =>
+                      onChange({
+                        joursRouleau: valeur.joursRouleau.includes(jourIso)
+                          ? valeur.joursRouleau.filter((j) => j !== jourIso)
+                          : [...valeur.joursRouleau, jourIso].sort(),
+                      })
+                    }
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {valeur.recurrence === 'mensuelle' && (
+        <label className="gestion-champ">
+          {T.reglages.champJoursMois}
+          <input
+            type="text"
+            value={valeur.joursMoisTexte}
+            onChange={(e) => onChange({ joursMoisTexte: e.target.value })}
+            placeholder={T.reglages.placeholderJoursMois}
+          />
+        </label>
+      )}
+
+      {valeur.recurrence === 'conditionnelle' && (
+        <label className="gestion-champ">
+          {T.reglages.champCondition}
+          <select value={valeur.condition} onChange={(e) => onChange({ condition: e.target.value })}>
+            {CONDITIONS.map((c) => (
+              <option key={c} value={c}>
+                {T.conditions[c]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {valeur.recurrence === 'intervalle' && (
+        <label className="gestion-champ">
+          {T.reglages.champIntervalle}
+          <input
+            type="number"
+            min="1"
+            value={valeur.intervalleJours}
+            onChange={(e) => onChange({ intervalleJours: e.target.value })}
+          />
+        </label>
+      )}
+    </>
+  )
 }
 
 export default function GestionTaches() {
@@ -63,6 +241,12 @@ export default function GestionTaches() {
   const [nouvelleTache, setNouvelleTache] = useState(NOUVELLE_TACHE_VIDE)
   const [ajoutEnCours, setAjoutEnCours] = useState(false)
   const [ajoutErreur, setAjoutErreur] = useState('')
+
+  // Édition de la récurrence d'une tâche existante (§ AJOUT 3) — un seul brouillon
+  // ouvert à la fois, identifié par l'id du template en cours d'édition.
+  const [recurrenceEnEdition, setRecurrenceEnEdition] = useState(null)
+  const [brouillonRecurrence, setBrouillonRecurrence] = useState(null)
+  const [recurrenceErreur, setRecurrenceErreur] = useState('')
 
   useEffect(() => {
     charger()
@@ -82,7 +266,7 @@ export default function GestionTaches() {
     }
   }
 
-  /** Écriture optimiste générique — un seul chemin d'écriture (jamais de suppression). */
+  /** Écriture optimiste générique (pas de suppression ici, voir demanderSuppression). */
   async function appliquer(template, champs) {
     setEnregistrement(template.id)
     setErreur('')
@@ -112,11 +296,48 @@ export default function GestionTaches() {
     if (confirme) appliquer(template, { actif: false })
   }
 
+  /** Suppression intelligente (§ AJOUT 1) : DELETE réel si aucun historique, sinon
+   * archivage (actif=false) pour ne jamais casser les completions passées. Le message
+   * de confirmation reflète déjà le sort de la tâche, choisi selon son historique. */
+  async function demanderSuppression(template) {
+    setErreur('')
+    try {
+      const nbCompletions = await compterCompletions(template.id)
+      const confirme = window.confirm(
+        nbCompletions > 0 ? T.reglages.confirmSuppressionArchive : T.reglages.confirmSuppressionSimple
+      )
+      if (!confirme) return
+
+      setEnregistrement(template.id)
+      const resultat = await supprimerTemplateSiPossible(template.id)
+      if (resultat === 'supprime') {
+        setTemplates((prev) => prev.filter((t) => t.id !== template.id))
+        setLibelles((prev) => {
+          const copie = { ...prev }
+          delete copie[template.id]
+          return copie
+        })
+      } else {
+        setTemplates((prev) => prev.map((t) => (t.id === template.id ? { ...t, actif: false } : t)))
+      }
+    } catch (e) {
+      setErreur(e.message)
+    } finally {
+      setEnregistrement(null)
+    }
+  }
+
   async function ajouterTache(e) {
     e.preventDefault()
     const libelle = nouvelleTache.libelle.trim()
     if (!libelle) return
     setAjoutErreur('')
+
+    const resultat = construireChampsRecurrence(nouvelleTache)
+    if (resultat.erreur) {
+      setAjoutErreur(resultat.erreur)
+      return
+    }
 
     // ordre = dernier de SA période + 1, pour que la tâche apparaisse en fin de sa
     // période (jamais en tête par défaut à cause d'un ordre 0/null).
@@ -127,43 +348,8 @@ export default function GestionTaches() {
     const champs = {
       libelle,
       periode: nouvelleTache.periode,
-      recurrence: nouvelleTache.recurrence,
       ordre: ordreMaxDeLaPeriode + 1,
-      jour_semaine: null,
-      jours_semaine: null,
-      jours_mois: null,
-      condition: null,
-      intervalle_jours: null,
-    }
-
-    if (nouvelleTache.recurrence === 'hebdo') {
-      if (nouvelleTache.modeHebdo === 'unique') {
-        champs.jour_semaine = nouvelleTache.jourUnique
-      } else if (nouvelleTache.joursRouleau.length === 0) {
-        setAjoutErreur(T.reglages.erreurRouleauVide)
-        return
-      } else {
-        champs.jours_semaine = nouvelleTache.joursRouleau
-      }
-    } else if (nouvelleTache.recurrence === 'mensuelle') {
-      const jours = nouvelleTache.joursMoisTexte
-        .split(',')
-        .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => Number.isInteger(n) && n >= 1 && n <= 31)
-      if (jours.length === 0) {
-        setAjoutErreur(T.reglages.erreurJoursMoisInvalides)
-        return
-      }
-      champs.jours_mois = jours
-    } else if (nouvelleTache.recurrence === 'conditionnelle') {
-      champs.condition = nouvelleTache.condition
-    } else if (nouvelleTache.recurrence === 'intervalle') {
-      const n = parseInt(nouvelleTache.intervalleJours, 10)
-      if (!Number.isInteger(n) || n < 1) {
-        setAjoutErreur(T.reglages.erreurIntervalleInvalide)
-        return
-      }
-      champs.intervalle_jours = n
+      ...resultat.champs,
     }
 
     setAjoutEnCours(true)
@@ -180,13 +366,70 @@ export default function GestionTaches() {
     }
   }
 
-  function toggleJourRouleau(jourIso) {
-    setNouvelleTache((prev) => ({
-      ...prev,
-      joursRouleau: prev.joursRouleau.includes(jourIso)
-        ? prev.joursRouleau.filter((j) => j !== jourIso)
-        : [...prev.joursRouleau, jourIso].sort(),
-    }))
+  function ouvrirEditionRecurrence(template) {
+    setRecurrenceEnEdition(template.id)
+    setBrouillonRecurrence(brouillonDepuisTemplate(template))
+    setRecurrenceErreur('')
+  }
+
+  function annulerEditionRecurrence() {
+    setRecurrenceEnEdition(null)
+    setBrouillonRecurrence(null)
+    setRecurrenceErreur('')
+  }
+
+  async function validerRecurrence(template) {
+    const resultat = construireChampsRecurrence(brouillonRecurrence)
+    if (resultat.erreur) {
+      setRecurrenceErreur(resultat.erreur)
+      return
+    }
+    await appliquer(template, resultat.champs)
+    setRecurrenceEnEdition(null)
+    setBrouillonRecurrence(null)
+    setRecurrenceErreur('')
+  }
+
+  /** Monter/descendre (§ AJOUT 2) : échange `ordre` avec le voisin de la MÊME PÉRIODE
+   * (l'ordre est une séquence de travail par période, indépendante de la famille — voir
+   * le tri centralisé dans src/lib/api.js). Persisté immédiatement en base. */
+  async function deplacer(template, direction) {
+    const siblings = templates
+      .filter((t) => t.periode === template.periode)
+      .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+    const index = siblings.findIndex((t) => t.id === template.id)
+    const voisinIndex = direction === 'haut' ? index - 1 : index + 1
+    if (voisinIndex < 0 || voisinIndex >= siblings.length) return
+    const voisin = siblings[voisinIndex]
+
+    const ordreTemplate = template.ordre
+    const ordreVoisin = voisin.ordre
+    setEnregistrement(template.id)
+    setErreur('')
+    setTemplates((prev) =>
+      prev.map((t) => {
+        if (t.id === template.id) return { ...t, ordre: ordreVoisin }
+        if (t.id === voisin.id) return { ...t, ordre: ordreTemplate }
+        return t
+      })
+    )
+    try {
+      await Promise.all([
+        updateTemplate(template.id, { ordre: ordreVoisin }),
+        updateTemplate(voisin.id, { ordre: ordreTemplate }),
+      ])
+    } catch (e) {
+      setErreur(e.message)
+      setTemplates((prev) =>
+        prev.map((t) => {
+          if (t.id === template.id) return { ...t, ordre: ordreTemplate }
+          if (t.id === voisin.id) return { ...t, ordre: ordreVoisin }
+          return t
+        })
+      )
+    } finally {
+      setEnregistrement(null)
+    }
   }
 
   if (chargement) return <p className="gestion-chargement">{T.commun.chargement}</p>
@@ -237,108 +480,10 @@ export default function GestionTaches() {
               </select>
             </label>
 
-            <label className="gestion-champ">
-              {T.reglages.champRecurrence}
-              <select
-                value={nouvelleTache.recurrence}
-                onChange={(e) => setNouvelleTache((prev) => ({ ...prev, recurrence: e.target.value }))}
-              >
-                {Object.keys(T.familles).map((r) => (
-                  <option key={r} value={r}>
-                    {T.familles[r]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {nouvelleTache.recurrence === 'hebdo' && (
-              <>
-                <label className="gestion-champ">
-                  {T.reglages.champTypeJour}
-                  <select
-                    value={nouvelleTache.modeHebdo}
-                    onChange={(e) => setNouvelleTache((prev) => ({ ...prev, modeHebdo: e.target.value }))}
-                  >
-                    <option value="unique">{T.reglages.optionJourUnique}</option>
-                    <option value="rouleau">{T.reglages.optionRouleau}</option>
-                  </select>
-                </label>
-
-                {nouvelleTache.modeHebdo === 'unique' ? (
-                  <label className="gestion-champ">
-                    {T.reglages.champJour}
-                    <select
-                      value={nouvelleTache.jourUnique}
-                      onChange={(e) =>
-                        setNouvelleTache((prev) => ({ ...prev, jourUnique: Number(e.target.value) }))
-                      }
-                    >
-                      {T.jours.noms.map((nom, index) => (
-                        <option key={index + 1} value={index + 1}>
-                          {nom}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <div className="gestion-jours-cases">
-                    {T.jours.abreviations.map((label, index) => {
-                      const jourIso = index + 1
-                      return (
-                        <button
-                          type="button"
-                          key={jourIso}
-                          className={`gestion-jour-case ${nouvelleTache.joursRouleau.includes(jourIso) ? 'actif' : ''}`}
-                          onClick={() => toggleJourRouleau(jourIso)}
-                        >
-                          {label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-
-            {nouvelleTache.recurrence === 'mensuelle' && (
-              <label className="gestion-champ">
-                {T.reglages.champJoursMois}
-                <input
-                  type="text"
-                  value={nouvelleTache.joursMoisTexte}
-                  onChange={(e) => setNouvelleTache((prev) => ({ ...prev, joursMoisTexte: e.target.value }))}
-                  placeholder={T.reglages.placeholderJoursMois}
-                />
-              </label>
-            )}
-
-            {nouvelleTache.recurrence === 'conditionnelle' && (
-              <label className="gestion-champ">
-                {T.reglages.champCondition}
-                <select
-                  value={nouvelleTache.condition}
-                  onChange={(e) => setNouvelleTache((prev) => ({ ...prev, condition: e.target.value }))}
-                >
-                  {CONDITIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {T.conditions[c]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {nouvelleTache.recurrence === 'intervalle' && (
-              <label className="gestion-champ">
-                {T.reglages.champIntervalle}
-                <input
-                  type="number"
-                  min="1"
-                  value={nouvelleTache.intervalleJours}
-                  onChange={(e) => setNouvelleTache((prev) => ({ ...prev, intervalleJours: e.target.value }))}
-                />
-              </label>
-            )}
+            <ChampsRecurrence
+              valeur={nouvelleTache}
+              onChange={(patch) => setNouvelleTache((prev) => ({ ...prev, ...patch }))}
+            />
 
             {ajoutErreur && <p className="gestion-erreur">{ajoutErreur}</p>}
 
@@ -362,6 +507,14 @@ export default function GestionTaches() {
             const aJoursMultiples = template.jours_semaine !== null && template.jours_semaine !== undefined
             const fraicheur = statutFraicheur(template)
             const couleurs = PERIODE_COULEURS[template.periode]
+            const enEditionRecurrence = recurrenceEnEdition === template.id
+
+            const siblingsPeriode = templates
+              .filter((t) => t.periode === template.periode)
+              .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+            const indexPeriode = siblingsPeriode.findIndex((t) => t.id === template.id)
+            const estPremierDeSaPeriode = indexPeriode <= 0
+            const estDernierDeSaPeriode = indexPeriode >= siblingsPeriode.length - 1
 
             return (
               <div
@@ -375,6 +528,26 @@ export default function GestionTaches() {
                   </span>
                 )}
                 <div className="gestion-carte-entete">
+                  <div className="gestion-deplacer">
+                    <button
+                      type="button"
+                      className="gestion-deplacer-bouton"
+                      onClick={() => deplacer(template, 'haut')}
+                      disabled={enCours || estPremierDeSaPeriode}
+                      title={T.reglages.monterBouton}
+                    >
+                      {T.reglages.monterBouton}
+                    </button>
+                    <button
+                      type="button"
+                      className="gestion-deplacer-bouton"
+                      onClick={() => deplacer(template, 'bas')}
+                      disabled={enCours || estDernierDeSaPeriode}
+                      title={T.reglages.descendreBouton}
+                    >
+                      {T.reglages.descendreBouton}
+                    </button>
+                  </div>
                   <textarea
                     ref={autoResize}
                     rows={2}
@@ -387,6 +560,9 @@ export default function GestionTaches() {
                     onBlur={() => validerLibelle(template)}
                     disabled={enCours}
                   />
+                </div>
+
+                <div className="gestion-actions-secondaires">
                   <button
                     type="button"
                     className={`gestion-actif-bouton ${template.actif ? '' : 'inactif'}`}
@@ -396,6 +572,14 @@ export default function GestionTaches() {
                     disabled={enCours}
                   >
                     {template.actif ? T.reglages.desactiverBouton : T.reglages.reactiverBouton}
+                  </button>
+                  <button
+                    type="button"
+                    className="gestion-supprimer-bouton"
+                    onClick={() => demanderSuppression(template)}
+                    disabled={enCours}
+                  >
+                    {T.reglages.supprimerBouton}
                   </button>
                 </div>
 
@@ -430,7 +614,41 @@ export default function GestionTaches() {
                       })}
                 </p>
 
-                {template.recurrence === 'hebdo' && (
+                {!enEditionRecurrence && (
+                  <button
+                    type="button"
+                    className="gestion-modifier-recurrence-bouton"
+                    onClick={() => ouvrirEditionRecurrence(template)}
+                    disabled={enCours}
+                  >
+                    {T.reglages.modifierRecurrenceBouton}
+                  </button>
+                )}
+
+                {enEditionRecurrence && (
+                  <div className="gestion-edition-recurrence">
+                    <ChampsRecurrence
+                      valeur={brouillonRecurrence}
+                      onChange={(patch) => setBrouillonRecurrence((prev) => ({ ...prev, ...patch }))}
+                    />
+                    {recurrenceErreur && <p className="gestion-erreur">{recurrenceErreur}</p>}
+                    <div className="gestion-edition-recurrence-actions">
+                      <button type="button" onClick={annulerEditionRecurrence} disabled={enCours}>
+                        {T.commun.annuler}
+                      </button>
+                      <button
+                        type="button"
+                        className="gestion-ajout-valider"
+                        onClick={() => validerRecurrence(template)}
+                        disabled={enCours}
+                      >
+                        {T.commun.enregistrer}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!enEditionRecurrence && template.recurrence === 'hebdo' && (
                   <div className="gestion-jours-cases">
                     {T.jours.abreviations.map((label, index) => {
                       const jourIso = index + 1

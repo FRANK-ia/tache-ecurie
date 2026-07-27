@@ -73,10 +73,10 @@ export async function fetchTemplatesToutes() {
 }
 
 /**
- * Écriture générique sur un template (libellé, période, jours, actif...). Seul point
- * d'entrée en écriture sur task_templates — jamais de DELETE (§ gestion des tâches
- * employeur : désactiver via actif=false plutôt que supprimer, pour préserver
- * l'historique des task_completions qui référencent le template).
+ * Écriture générique sur un template (libellé, période, jours, récurrence, actif...).
+ * Point d'entrée principal en écriture sur task_templates — pour toute modification qui
+ * n'est PAS une suppression (voir supprimerTemplateSiPossible plus bas pour ce cas précis :
+ * un template avec historique ne doit jamais être DELETE, seulement désactivé).
  */
 export async function updateTemplate(templateId, champs) {
   const res = await supabase.from('task_templates').update(champs).eq('id', templateId)
@@ -91,6 +91,33 @@ export async function insertTemplate(champs) {
     .select()
     .single()
   return unwrap(res)
+}
+
+/** Nombre de completions déjà enregistrées pour ce template (toutes dates confondues). */
+export async function compterCompletions(templateId) {
+  const { count, error } = await supabase
+    .from('task_completions')
+    .select('*', { count: 'exact', head: true })
+    .eq('template_id', templateId)
+  if (error) throw new Error(error.message)
+  return count ?? 0
+}
+
+/**
+ * Supprime ou archive un template selon son historique : DELETE réel si aucune
+ * completion n'existe (rien à préserver), sinon actif=false (désactivation) pour ne
+ * jamais casser les task_completions passées qui référencent ce template. Retourne
+ * 'supprime' ou 'archive' pour que l'écran affiche le bon message à l'utilisateur.
+ */
+export async function supprimerTemplateSiPossible(templateId) {
+  const nbCompletions = await compterCompletions(templateId)
+  if (nbCompletions > 0) {
+    await updateTemplate(templateId, { actif: false })
+    return 'archive'
+  }
+  const res = await supabase.from('task_templates').delete().eq('id', templateId)
+  unwrap(res)
+  return 'supprime'
 }
 
 /**

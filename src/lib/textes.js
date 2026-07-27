@@ -42,6 +42,8 @@ export const T = {
     chargement: 'Chargement…',
     deconnexion: '· quitter',
     ajouter: 'Ajouter',
+    annuler: 'Annuler',
+    enregistrer: 'Enregistrer',
   },
 
   // ---- Labels par clé technique (période, condition, rôle, jour, famille) ----
@@ -191,6 +193,14 @@ export const T = {
     moisSuffixe: '(les {jours} du mois)',
     conditionSuffixe: '(si {condition})',
     familleConditionnelleTitre: 'Conditionnelle — {condition}',
+    supprimerBouton: 'Supprimer',
+    confirmSuppressionSimple: 'Supprimer définitivement cette tâche ? Cette action est irréversible.',
+    confirmSuppressionArchive:
+      'Cette tâche a un historique : elle sera archivée (masquée) plutôt que supprimée, ' +
+      'pour préserver les données passées. Continuer ?',
+    monterBouton: '▲',
+    descendreBouton: '▼',
+    modifierRecurrenceBouton: 'Modifier la récurrence',
   },
 
   // ---- Comptes (renommer / changer le PIN) ----

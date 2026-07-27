@@ -71,6 +71,90 @@
   gap: 8px;
 }
 
+.gestion-deplacer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.gestion-deplacer-bouton {
+  width: 36px;
+  height: 20px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+}
+
+.gestion-deplacer-bouton:disabled {
+  opacity: 0.3;
+}
+
+.gestion-actions-secondaires {
+  display: flex;
+  gap: 8px;
+}
+
+.gestion-actions-secondaires .gestion-actif-bouton {
+  flex: 1;
+}
+
+.gestion-supprimer-bouton {
+  flex: 1;
+  min-height: var(--hauteur-tap-min);
+  padding: 0 12px;
+  border-radius: var(--rayon);
+  border: 1px solid var(--couleur-bordure);
+  background: #fff;
+  color: var(--couleur-texte-attenue);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.gestion-modifier-recurrence-bouton {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--couleur-accent);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 0;
+  text-decoration: underline;
+}
+
+.gestion-edition-recurrence {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px dashed var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 12px;
+}
+
+.gestion-edition-recurrence-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.gestion-edition-recurrence-actions button {
+  min-height: var(--hauteur-tap-min);
+  padding: 0 16px;
+  border-radius: var(--rayon);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gestion-edition-recurrence-actions button:not(.gestion-ajout-valider) {
+  border: 1px solid var(--couleur-bordure);
+  background: #fff;
+  color: var(--couleur-texte-attenue);
+}
+
 .gestion-libelle-champ {
   flex: 1;
   min-height: var(--hauteur-tap-min);
