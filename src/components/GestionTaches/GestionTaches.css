@@ -50,10 +50,16 @@
   opacity: 0.55;
 }
 
-.gestion-carte.fraiche {
+.gestion-carte.nouvelle {
   background: var(--couleur-nouveau-fond);
   border-color: var(--couleur-nouveau);
   box-shadow: inset 4px 0 0 var(--couleur-nouveau);
+}
+
+.gestion-carte.modifiee {
+  background: var(--couleur-modifie-fond);
+  border-color: var(--couleur-modifie);
+  box-shadow: inset 4px 0 0 var(--couleur-modifie);
 }
 
 .gestion-badge-fraicheur {
@@ -61,9 +67,16 @@
   font-size: 12px;
   font-weight: 700;
   color: #fff;
-  background: var(--couleur-nouveau);
   border-radius: 999px;
   padding: 3px 10px;
+}
+
+.gestion-badge-fraicheur.badge-nouveau {
+  background: var(--couleur-nouveau);
+}
+
+.gestion-badge-fraicheur.badge-modifie {
+  background: var(--couleur-modifie);
 }
 
 .gestion-carte-entete {

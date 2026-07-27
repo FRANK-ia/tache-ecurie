@@ -33,14 +33,11 @@ export const PERIODE_COULEURS = {
   soir: { fond: '#fbebf0', bordure: '#c4718f' },
 }
 
-// Détermine la saison utilisée pour l'horaire du soir affiché (§6.2).
-// Hypothèse par défaut : avril à septembre = été, reste = hiver. À confirmer.
-export const MOIS_DEBUT_ETE = 4
-export const MOIS_FIN_ETE = 9
-
+// Horaire du soir affiché (§6.2), selon la saison déterminée par getSaison()
+// (changement d'heure européen réel — voir calendarLogic.js).
 export const HORAIRE_SOIR = {
-  ete: '19h00',
-  hiver: '17h00',
+  ete: '18h30',
+  hiver: '17h30',
 }
 
 // Heure (0-23) après laquelle une période est considérée "passée" pour le calcul

@@ -386,10 +386,14 @@ export default function GestionTaches() {
             return (
               <div
                 key={template.id}
-                className={`gestion-carte ${template.actif ? '' : 'inactif'} ${fraicheur ? 'fraiche' : ''}`}
+                className={`gestion-carte ${template.actif ? '' : 'inactif'} ${
+                  fraicheur === 'nouveau' ? 'nouvelle' : fraicheur === 'modifie' ? 'modifiee' : ''
+                }`}
               >
                 {fraicheur && (
-                  <span className="gestion-badge-fraicheur">{fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}</span>
+                  <span className={`gestion-badge-fraicheur ${fraicheur === 'nouveau' ? 'badge-nouveau' : 'badge-modifie'}`}>
+                    {fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}
+                  </span>
                 )}
                 <div className="gestion-carte-entete">
                   <textarea

@@ -49,28 +49,39 @@
   background: #f0f0ee;
 }
 
-.task-item-badge {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--couleur-accent);
-  background: var(--couleur-accent-clair);
-  border-radius: 999px;
-  padding: 3px 9px;
-}
-
-.task-item-fraiche {
+.task-item-nouveau {
   background: var(--couleur-nouveau-fond);
   border-color: var(--couleur-nouveau);
   box-shadow: inset 4px 0 0 var(--couleur-nouveau);
 }
 
-.task-item-badge-fraicheur {
+.task-item-modifie {
+  background: var(--couleur-modifie-fond);
+  border-color: var(--couleur-modifie);
+  box-shadow: inset 4px 0 0 var(--couleur-modifie);
+}
+
+/* Badges pleins (fond soutenu + texte blanc) : trois signaux distincts qui ne se
+   superposent jamais sur une même tâche (nouveau/modifié = templates récurrents,
+   ajout = tâche ponctuelle) — pas de conflit de priorité entre eux. */
+.task-item-badge-fraicheur,
+.task-item-badge-ajout {
   flex-shrink: 0;
   font-size: 12px;
   font-weight: 700;
   color: #fff;
-  background: var(--couleur-nouveau);
   border-radius: 999px;
   padding: 3px 10px;
+}
+
+.task-item-badge-fraicheur.badge-nouveau {
+  background: var(--couleur-nouveau);
+}
+
+.task-item-badge-fraicheur.badge-modifie {
+  background: var(--couleur-modifie);
+}
+
+.task-item-badge-ajout {
+  background: var(--couleur-ajout);
 }

@@ -2,13 +2,7 @@
 // au réseau ou à l'horloge système directement (la date est toujours un paramètre),
 // ce qui les rend testables en isolation.
 
-import {
-  MOIS_DEBUT_ETE,
-  MOIS_FIN_ETE,
-  HEURE_FIN_PERIODE,
-  DUREE_FRAICHEUR_HEURES,
-  SEUIL_NOUVEAU_MINUTES,
-} from './constants'
+import { HEURE_FIN_PERIODE, DUREE_FRAICHEUR_HEURES, SEUIL_NOUVEAU_MINUTES } from './constants'
 
 /** 1 = lundi ... 7 = dimanche (contrairement à Date#getDay qui donne 0 = dimanche). */
 export function isoDayOfWeek(date) {
@@ -49,9 +43,24 @@ export function daysBetweenDateKeys(aKey, bKey) {
   return Math.round((b - a) / 86400000)
 }
 
+/** Dernier dimanche du mois `moisIndex` (0=janvier) de `annee`, à 00h00 locale. */
+function dernierDimancheDuMois(annee, moisIndex) {
+  const dernierJour = new Date(annee, moisIndex + 1, 0)
+  dernierJour.setDate(dernierJour.getDate() - dernierJour.getDay())
+  return dernierJour
+}
+
+/**
+ * Saison au sens du changement d'heure européen réel (pas des mois pleins) :
+ * été du dernier dimanche de mars (inclus) au dernier dimanche d'octobre (exclu),
+ * hiver le reste de l'année. Ces dates changent chaque année, d'où le calcul
+ * dynamique — ne jamais coder de dates en dur ici.
+ */
 export function getSaison(date) {
-  const mois = date.getMonth() + 1
-  return mois >= MOIS_DEBUT_ETE && mois <= MOIS_FIN_ETE ? 'ete' : 'hiver'
+  const annee = date.getFullYear()
+  const debutEte = dernierDimancheDuMois(annee, 2) // mars
+  const finEte = dernierDimancheDuMois(annee, 9) // octobre
+  return date >= debutEte && date < finEte ? 'ete' : 'hiver'
 }
 
 /**

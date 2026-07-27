@@ -80,14 +80,38 @@ describe('estJourNonTravaille', () => {
   })
 })
 
-describe('getSaison', () => {
-  it('avril à septembre = été', () => {
-    expect(getSaison(new Date(2026, 3, 1))).toBe('ete')
-    expect(getSaison(new Date(2026, 8, 30))).toBe('ete')
+describe('getSaison (bascule sur le vrai changement d\'heure européen)', () => {
+  // 2026 : dernier dimanche de mars = 29/03, dernier dimanche d'octobre = 25/10.
+  it('bascule de printemps 2026 (29 mars)', () => {
+    expect(getSaison(new Date(2026, 2, 28))).toBe('hiver') // veille
+    expect(getSaison(new Date(2026, 2, 29))).toBe('ete') // jour de bascule
+    expect(getSaison(new Date(2026, 2, 30))).toBe('ete') // lendemain
   })
-  it('octobre à mars = hiver', () => {
-    expect(getSaison(new Date(2026, 9, 1))).toBe('hiver')
-    expect(getSaison(new Date(2026, 2, 31))).toBe('hiver')
+
+  it('bascule d\'automne 2026 (25 octobre)', () => {
+    expect(getSaison(new Date(2026, 9, 24))).toBe('ete') // veille
+    expect(getSaison(new Date(2026, 9, 25))).toBe('hiver') // jour de bascule
+    expect(getSaison(new Date(2026, 9, 26))).toBe('hiver') // lendemain
+  })
+
+  it('en plein été / plein hiver 2026', () => {
+    expect(getSaison(new Date(2026, 6, 15))).toBe('ete') // juillet
+    expect(getSaison(new Date(2026, 0, 15))).toBe('hiver') // janvier
+    expect(getSaison(new Date(2026, 11, 15))).toBe('hiver') // décembre
+  })
+
+  // 2027 : dernier dimanche de mars = 28/03, dernier dimanche d'octobre = 31/10 —
+  // année différente avec un cas limite (le 31 octobre est lui-même un dimanche),
+  // pour vérifier que le calcul est bien dynamique et pas une date codée en dur.
+  it('bascule de printemps 2027 (28 mars) — année différente', () => {
+    expect(getSaison(new Date(2027, 2, 27))).toBe('hiver')
+    expect(getSaison(new Date(2027, 2, 28))).toBe('ete')
+  })
+
+  it('bascule d\'automne 2027 (31 octobre, cas limite fin de mois)', () => {
+    expect(getSaison(new Date(2027, 9, 30))).toBe('ete')
+    expect(getSaison(new Date(2027, 9, 31))).toBe('hiver')
+    expect(getSaison(new Date(2027, 10, 1))).toBe('hiver')
   })
 })
 
