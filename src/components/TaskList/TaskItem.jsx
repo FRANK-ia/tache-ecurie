@@ -1,8 +1,9 @@
-import { CONDITION_EMOJIS, BADGE_COULEURS } from '../../lib/constants'
+import { BADGE_COULEURS } from '../../lib/constants'
+import { T } from '../../lib/textes'
 import './TaskItem.css'
 
 export default function TaskItem({ task, onToggle, disabled }) {
-  const emoji = CONDITION_EMOJIS[task.condition]
+  const emoji = T.conditionEmojis[task.condition]
 
   return (
     <button
@@ -17,12 +18,12 @@ export default function TaskItem({ task, onToggle, disabled }) {
       </span>
       {task.fraicheur && (
         <span className="task-item-badge-fraicheur" style={{ background: BADGE_COULEURS[task.fraicheur] }}>
-          {task.fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}
+          {task.fraicheur === 'nouveau' ? T.badges.nouveau : T.badges.modifie}
         </span>
       )}
       {task.kind === 'ponctuelle' && (
         <span className="task-item-badge-ajout" style={{ background: BADGE_COULEURS.ajout }}>
-          ajout
+          {T.badges.ajout}
         </span>
       )}
     </button>

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchJoursRepos, updateJoursRepos, fetchConges, insertConge, supprimerConge } from '../../lib/api'
 import { toDateKey } from '../../lib/calendarLogic'
-import { JOURS_SEMAINE_LABELS } from '../../lib/constants'
+import { T } from '../../lib/textes'
 import './GestionRepos.css'
-
-const JOURS_NOMS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
 export default function GestionRepos() {
   const [joursRepos, setJoursRepos] = useState([])
@@ -58,11 +56,11 @@ export default function GestionRepos() {
     e.preventDefault()
     setAjoutErreur('')
     if (!nouveauConge.dateDebut || !nouveauConge.dateFin) {
-      setAjoutErreur('Indique une date de début et une date de fin.')
+      setAjoutErreur(T.repos.erreurDatesManquantes)
       return
     }
     if (nouveauConge.dateFin < nouveauConge.dateDebut) {
-      setAjoutErreur('La date de fin doit être après la date de début.')
+      setAjoutErreur(T.repos.erreurDatesInvalides)
       return
     }
     setAjoutEnCours(true)
@@ -82,7 +80,7 @@ export default function GestionRepos() {
   }
 
   async function retirerConge(conge) {
-    const confirme = window.confirm('Retirer ce congé ?')
+    const confirme = window.confirm(T.repos.confirmRetraitConge)
     if (!confirme) return
     setErreur('')
     try {
@@ -93,7 +91,7 @@ export default function GestionRepos() {
     }
   }
 
-  if (chargement) return <p className="repos-chargement">Chargement…</p>
+  if (chargement) return <p className="repos-chargement">{T.commun.chargement}</p>
 
   const aujourdhuiKey = toDateKey(new Date())
   const congesAVenir = conges.filter((c) => c.date_fin >= aujourdhuiKey)
@@ -103,10 +101,10 @@ export default function GestionRepos() {
       {erreur && <p className="repos-erreur">{erreur}</p>}
 
       <section className="repos-section">
-        <h2 className="repos-section-titre">Repos hebdomadaire</h2>
-        <p className="repos-intro">Jour(s) où le centre ne fonctionne pas, chaque semaine.</p>
+        <h2 className="repos-section-titre">{T.repos.hebdoTitre}</h2>
+        <p className="repos-intro">{T.repos.hebdoIntro}</p>
         <div className="repos-jours-cases">
-          {JOURS_SEMAINE_LABELS.map((label, index) => {
+          {T.jours.abreviations.map((label, index) => {
             const jourIso = index + 1
             return (
               <button
@@ -115,7 +113,7 @@ export default function GestionRepos() {
                 className={`repos-jour-case ${joursRepos.includes(jourIso) ? 'actif' : ''}`}
                 onClick={() => toggleJour(jourIso)}
                 disabled={enregistrementJour}
-                title={JOURS_NOMS[index]}
+                title={T.jours.noms[index]}
               >
                 {label}
               </button>
@@ -125,10 +123,10 @@ export default function GestionRepos() {
       </section>
 
       <section className="repos-section">
-        <h2 className="repos-section-titre">Ajouter un congé</h2>
+        <h2 className="repos-section-titre">{T.repos.congeAjoutTitre}</h2>
         <form className="repos-conge-form" onSubmit={ajouterConge}>
           <label className="repos-champ">
-            Du
+            {T.repos.champDu}
             <input
               type="date"
               value={nouveauConge.dateDebut}
@@ -136,7 +134,7 @@ export default function GestionRepos() {
             />
           </label>
           <label className="repos-champ">
-            Au
+            {T.repos.champAu}
             <input
               type="date"
               value={nouveauConge.dateFin}
@@ -144,25 +142,25 @@ export default function GestionRepos() {
             />
           </label>
           <label className="repos-champ">
-            Motif (optionnel)
+            {T.repos.champMotif}
             <input
               type="text"
               value={nouveauConge.motif}
               onChange={(e) => setNouveauConge((p) => ({ ...p, motif: e.target.value }))}
-              placeholder="Vacances, fermeture annuelle…"
+              placeholder={T.repos.motifPlaceholder}
             />
           </label>
           {ajoutErreur && <p className="repos-erreur">{ajoutErreur}</p>}
           <button type="submit" className="repos-conge-bouton" disabled={ajoutEnCours}>
-            Ajouter
+            {T.commun.ajouter}
           </button>
         </form>
       </section>
 
       <section className="repos-section">
-        <h2 className="repos-section-titre">Congés à venir</h2>
+        <h2 className="repos-section-titre">{T.repos.congesAVenirTitre}</h2>
         {congesAVenir.length === 0 ? (
-          <p className="repos-vide">Aucun congé prévu.</p>
+          <p className="repos-vide">{T.repos.congesVide}</p>
         ) : (
           <ul className="repos-conges-liste">
             {congesAVenir.map((conge) => (
@@ -172,7 +170,7 @@ export default function GestionRepos() {
                 </p>
                 {conge.motif && <p className="repos-conge-motif">{conge.motif}</p>}
                 <button type="button" className="repos-conge-retirer" onClick={() => retirerConge(conge)}>
-                  Retirer
+                  {T.repos.retirerBouton}
                 </button>
               </li>
             ))}

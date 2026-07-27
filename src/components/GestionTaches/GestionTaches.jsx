@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchTemplatesToutes, updateTemplate, insertTemplate } from '../../lib/api'
 import { statutFraicheur } from '../../lib/calendarLogic'
-import {
-  PERIODES,
-  PERIODE_LABELS,
-  PERIODE_COULEURS,
-  BADGE_COULEURS,
-  CONDITIONS,
-  CONDITION_LABELS,
-  CONDITION_EMOJIS,
-  JOURS_SEMAINE_LABELS,
-} from '../../lib/constants'
+import { PERIODES, PERIODE_COULEURS, BADGE_COULEURS, CONDITIONS } from '../../lib/constants'
+import { T, formatTexte } from '../../lib/textes'
 import './GestionTaches.css'
 
 /** Fait grandir la textarea pour toujours montrer le texte entier (§ libellés longs). */
@@ -18,15 +10,6 @@ function autoResize(el) {
   if (!el) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
-}
-
-const RECURRENCE_LABELS = {
-  quotidienne: 'Quotidienne',
-  hebdo: 'Hebdomadaire',
-  mensuelle: 'Mensuelle',
-  conditionnelle: 'Conditionnelle',
-  intervalle: 'Intervalle',
-  premier_vendredi: 'Premier vendredi du mois',
 }
 
 const RECURRENCE_ICONS = {
@@ -41,15 +24,15 @@ const RECURRENCE_ICONS = {
 // récurrence conditionnelle est elle-même éclatée en une sous-famille par condition
 // (pluie, gel, orage, gardiennage) plutôt que groupée en bloc.
 const FAMILLES = [
-  { cle: 'quotidienne', titre: 'Quotidienne', icone: RECURRENCE_ICONS.quotidienne },
-  { cle: 'hebdo', titre: 'Hebdomadaire', icone: RECURRENCE_ICONS.hebdo },
-  { cle: 'mensuelle', titre: 'Mensuelle', icone: RECURRENCE_ICONS.mensuelle },
-  { cle: 'premier_vendredi', titre: 'Premier vendredi du mois', icone: RECURRENCE_ICONS.premier_vendredi },
-  { cle: 'intervalle', titre: 'Intervalle (tous les X jours)', icone: RECURRENCE_ICONS.intervalle },
+  { cle: 'quotidienne', titre: T.familles.quotidienne, icone: RECURRENCE_ICONS.quotidienne },
+  { cle: 'hebdo', titre: T.familles.hebdo, icone: RECURRENCE_ICONS.hebdo },
+  { cle: 'mensuelle', titre: T.familles.mensuelle, icone: RECURRENCE_ICONS.mensuelle },
+  { cle: 'premier_vendredi', titre: T.familles.premier_vendredi, icone: RECURRENCE_ICONS.premier_vendredi },
+  { cle: 'intervalle', titre: T.reglages.familleIntervalleTitre, icone: RECURRENCE_ICONS.intervalle },
   ...CONDITIONS.map((condition) => ({
     cle: `conditionnelle:${condition}`,
-    titre: `Conditionnelle — ${CONDITION_LABELS[condition]}`,
-    icone: CONDITION_EMOJIS[condition],
+    titre: formatTexte(T.reglages.familleConditionnelleTitre, { condition: T.conditions[condition] }),
+    icone: T.conditionEmojis[condition],
   })),
 ]
 
@@ -125,9 +108,7 @@ export default function GestionTaches() {
   }
 
   function demanderDesactivation(template) {
-    const confirme = window.confirm(
-      "Cette tâche n'apparaîtra plus les prochains jours. L'historique est conservé. Continuer ?"
-    )
+    const confirme = window.confirm(T.reglages.confirmDesactivation)
     if (confirme) appliquer(template, { actif: false })
   }
 
@@ -159,7 +140,7 @@ export default function GestionTaches() {
       if (nouvelleTache.modeHebdo === 'unique') {
         champs.jour_semaine = nouvelleTache.jourUnique
       } else if (nouvelleTache.joursRouleau.length === 0) {
-        setAjoutErreur('Sélectionne au moins un jour pour une tâche à rouleau.')
+        setAjoutErreur(T.reglages.erreurRouleauVide)
         return
       } else {
         champs.jours_semaine = nouvelleTache.joursRouleau
@@ -170,7 +151,7 @@ export default function GestionTaches() {
         .map((s) => parseInt(s.trim(), 10))
         .filter((n) => Number.isInteger(n) && n >= 1 && n <= 31)
       if (jours.length === 0) {
-        setAjoutErreur('Indique au moins un jour du mois valide (1 à 31), séparés par des virgules.')
+        setAjoutErreur(T.reglages.erreurJoursMoisInvalides)
         return
       }
       champs.jours_mois = jours
@@ -179,7 +160,7 @@ export default function GestionTaches() {
     } else if (nouvelleTache.recurrence === 'intervalle') {
       const n = parseInt(nouvelleTache.intervalleJours, 10)
       if (!Number.isInteger(n) || n < 1) {
-        setAjoutErreur('Le nombre de jours doit être un entier positif.')
+        setAjoutErreur(T.reglages.erreurIntervalleInvalide)
         return
       }
       champs.intervalle_jours = n
@@ -208,7 +189,7 @@ export default function GestionTaches() {
     }))
   }
 
-  if (chargement) return <p className="gestion-chargement">Chargement…</p>
+  if (chargement) return <p className="gestion-chargement">{T.commun.chargement}</p>
 
   const parFamille = FAMILLES.map((f) => ({
     ...f,
@@ -217,23 +198,19 @@ export default function GestionTaches() {
 
   return (
     <div className="gestion-taches">
-      <p className="gestion-intro">
-        Modifie le libellé, la période ou les jours d'une tâche récurrente. Désactiver une tâche
-        la retire du planning des prochains jours sans toucher à l'historique déjà enregistré —
-        elle n'est jamais supprimée.
-      </p>
+      <p className="gestion-intro">{T.reglages.intro}</p>
 
       {erreur && <p className="gestion-erreur">{erreur}</p>}
 
       <div className="gestion-ajout">
         <button type="button" className="gestion-ajout-bouton" onClick={() => setAjoutOuvert((v) => !v)}>
-          {ajoutOuvert ? '− Fermer' : '+ Ajouter une tâche récurrente'}
+          {ajoutOuvert ? T.reglages.fermerAjout : T.reglages.ouvrirAjout}
         </button>
 
         {ajoutOuvert && (
           <form className="gestion-ajout-form" onSubmit={ajouterTache}>
             <label className="gestion-champ">
-              Libellé
+              {T.reglages.champLibelle}
               <textarea
                 ref={autoResize}
                 rows={2}
@@ -247,28 +224,28 @@ export default function GestionTaches() {
             </label>
 
             <label className="gestion-champ">
-              Période
+              {T.reglages.champPeriode}
               <select
                 value={nouvelleTache.periode}
                 onChange={(e) => setNouvelleTache((prev) => ({ ...prev, periode: e.target.value }))}
               >
                 {PERIODES.map((p) => (
                   <option key={p} value={p}>
-                    {PERIODE_LABELS[p]}
+                    {T.periodes[p]}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="gestion-champ">
-              Récurrence
+              {T.reglages.champRecurrence}
               <select
                 value={nouvelleTache.recurrence}
                 onChange={(e) => setNouvelleTache((prev) => ({ ...prev, recurrence: e.target.value }))}
               >
-                {Object.keys(RECURRENCE_LABELS).map((r) => (
+                {Object.keys(T.familles).map((r) => (
                   <option key={r} value={r}>
-                    {RECURRENCE_LABELS[r]}
+                    {T.familles[r]}
                   </option>
                 ))}
               </select>
@@ -277,35 +254,35 @@ export default function GestionTaches() {
             {nouvelleTache.recurrence === 'hebdo' && (
               <>
                 <label className="gestion-champ">
-                  Type de jour
+                  {T.reglages.champTypeJour}
                   <select
                     value={nouvelleTache.modeHebdo}
                     onChange={(e) => setNouvelleTache((prev) => ({ ...prev, modeHebdo: e.target.value }))}
                   >
-                    <option value="unique">Un jour fixe chaque semaine</option>
-                    <option value="rouleau">Plusieurs jours (rouleau, modifiable ensuite)</option>
+                    <option value="unique">{T.reglages.optionJourUnique}</option>
+                    <option value="rouleau">{T.reglages.optionRouleau}</option>
                   </select>
                 </label>
 
                 {nouvelleTache.modeHebdo === 'unique' ? (
                   <label className="gestion-champ">
-                    Jour
+                    {T.reglages.champJour}
                     <select
                       value={nouvelleTache.jourUnique}
                       onChange={(e) =>
                         setNouvelleTache((prev) => ({ ...prev, jourUnique: Number(e.target.value) }))
                       }
                     >
-                      {JOURS_SEMAINE_LABELS.map((label, index) => (
+                      {T.jours.noms.map((nom, index) => (
                         <option key={index + 1} value={index + 1}>
-                          {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][index]}
+                          {nom}
                         </option>
                       ))}
                     </select>
                   </label>
                 ) : (
                   <div className="gestion-jours-cases">
-                    {JOURS_SEMAINE_LABELS.map((label, index) => {
+                    {T.jours.abreviations.map((label, index) => {
                       const jourIso = index + 1
                       return (
                         <button
@@ -325,26 +302,26 @@ export default function GestionTaches() {
 
             {nouvelleTache.recurrence === 'mensuelle' && (
               <label className="gestion-champ">
-                Jours du mois (ex : 1, 15)
+                {T.reglages.champJoursMois}
                 <input
                   type="text"
                   value={nouvelleTache.joursMoisTexte}
                   onChange={(e) => setNouvelleTache((prev) => ({ ...prev, joursMoisTexte: e.target.value }))}
-                  placeholder="1, 15"
+                  placeholder={T.reglages.placeholderJoursMois}
                 />
               </label>
             )}
 
             {nouvelleTache.recurrence === 'conditionnelle' && (
               <label className="gestion-champ">
-                Condition
+                {T.reglages.champCondition}
                 <select
                   value={nouvelleTache.condition}
                   onChange={(e) => setNouvelleTache((prev) => ({ ...prev, condition: e.target.value }))}
                 >
                   {CONDITIONS.map((c) => (
                     <option key={c} value={c}>
-                      {CONDITION_LABELS[c]}
+                      {T.conditions[c]}
                     </option>
                   ))}
                 </select>
@@ -353,7 +330,7 @@ export default function GestionTaches() {
 
             {nouvelleTache.recurrence === 'intervalle' && (
               <label className="gestion-champ">
-                Tous les combien de jours
+                {T.reglages.champIntervalle}
                 <input
                   type="number"
                   min="1"
@@ -366,13 +343,13 @@ export default function GestionTaches() {
             {ajoutErreur && <p className="gestion-erreur">{ajoutErreur}</p>}
 
             <button type="submit" className="gestion-ajout-valider" disabled={ajoutEnCours || !nouvelleTache.libelle.trim()}>
-              Créer la tâche
+              {T.reglages.creerBouton}
             </button>
           </form>
         )}
       </div>
 
-      {parFamille.length === 0 && <p className="gestion-vide">Aucune tâche récurrente configurée.</p>}
+      {parFamille.length === 0 && <p className="gestion-vide">{T.reglages.vide}</p>}
 
       {parFamille.map((groupe) => (
         <section key={groupe.cle} className="gestion-groupe">
@@ -394,7 +371,7 @@ export default function GestionTaches() {
               >
                 {fraicheur && (
                   <span className="gestion-badge-fraicheur" style={{ background: BADGE_COULEURS[fraicheur] }}>
-                    {fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}
+                    {fraicheur === 'nouveau' ? T.badges.nouveau : T.badges.modifie}
                   </span>
                 )}
                 <div className="gestion-carte-entete">
@@ -418,16 +395,14 @@ export default function GestionTaches() {
                     }
                     disabled={enCours}
                   >
-                    {template.actif ? 'Désactiver' : 'Réactiver'}
+                    {template.actif ? T.reglages.desactiverBouton : T.reglages.reactiverBouton}
                   </button>
                 </div>
 
-                {!template.actif && (
-                  <p className="gestion-statut">Désactivée — n'apparaît plus dans le planning.</p>
-                )}
+                {!template.actif && <p className="gestion-statut">{T.reglages.statutInactif}</p>}
 
                 <label className="gestion-champ">
-                  Période
+                  {T.reglages.champPeriode}
                   <select
                     value={template.periode}
                     onChange={(e) => appliquer(template, { periode: e.target.value })}
@@ -435,25 +410,29 @@ export default function GestionTaches() {
                   >
                     {PERIODES.map((p) => (
                       <option key={p} value={p}>
-                        {PERIODE_LABELS[p]}
+                        {T.periodes[p]}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <p className="gestion-recurrence">
-                  Récurrence : {RECURRENCE_LABELS[template.recurrence] ?? template.recurrence}
-                  {template.recurrence === 'intervalle' && ` (tous les ${template.intervalle_jours} jours)`}
+                  {formatTexte(T.reglages.recurrencePrefixe, { label: T.familles[template.recurrence] ?? template.recurrence })}
+                  {template.recurrence === 'intervalle' &&
+                    ' ' + formatTexte(T.reglages.intervalleSuffixe, { n: template.intervalle_jours })}
                   {template.recurrence === 'mensuelle' &&
                     template.jours_mois &&
-                    ` (les ${template.jours_mois.join(', ')} du mois)`}
+                    ' ' + formatTexte(T.reglages.moisSuffixe, { jours: template.jours_mois.join(', ') })}
                   {template.recurrence === 'conditionnelle' &&
-                    ` (si ${CONDITION_LABELS[template.condition] ?? template.condition})`}
+                    ' ' +
+                      formatTexte(T.reglages.conditionSuffixe, {
+                        condition: T.conditions[template.condition] ?? template.condition,
+                      })}
                 </p>
 
                 {template.recurrence === 'hebdo' && (
                   <div className="gestion-jours-cases">
-                    {JOURS_SEMAINE_LABELS.map((label, index) => {
+                    {T.jours.abreviations.map((label, index) => {
                       const jourIso = index + 1
                       const actif = aJoursMultiples
                         ? (template.jours_semaine ?? []).includes(jourIso)

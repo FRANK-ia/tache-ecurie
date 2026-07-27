@@ -8,7 +8,8 @@ import {
   fetchObservationsPourDate,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey } from '../../lib/calendarLogic'
-import { PERIODES, PERIODE_LABELS, PERIODE_ICONS, PERIODE_COULEURS, CONDITION_EMOJIS } from '../../lib/constants'
+import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
+import { T } from '../../lib/textes'
 import './Historique.css'
 
 export default function Historique() {
@@ -81,10 +82,10 @@ export default function Historique() {
       {erreur && <p className="historique-erreur">{erreur}</p>}
 
       {chargement ? (
-        <p className="historique-chargement">Chargement…</p>
+        <p className="historique-chargement">{T.commun.chargement}</p>
       ) : (
         <>
-          {parPeriode.length === 0 && <p className="historique-vide">Aucune tâche attendue ce jour-là.</p>}
+          {parPeriode.length === 0 && <p className="historique-vide">{T.historique.tachesVide}</p>}
           {parPeriode.map((groupe) => {
             const couleurs = PERIODE_COULEURS[groupe.periode]
             return (
@@ -95,19 +96,19 @@ export default function Historique() {
               >
                 <h3 className="historique-entete">
                   <span className="historique-icone" aria-hidden="true">
-                    {PERIODE_ICONS[groupe.periode]}
+                    {T.periodeIcones[groupe.periode]}
                   </span>
-                  {PERIODE_LABELS[groupe.periode]}
+                  {T.periodes[groupe.periode]}
                 </h3>
                 <ul className="historique-liste">
                   {groupe.taches.map((t) => (
                     <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>
                       <span className="historique-marque">{t.fait ? '✓' : '✗'}</span>{' '}
-                      {CONDITION_EMOJIS[t.condition] && (
-                        <span aria-hidden="true">{CONDITION_EMOJIS[t.condition]} </span>
+                      {T.conditionEmojis[t.condition] && (
+                        <span aria-hidden="true">{T.conditionEmojis[t.condition]} </span>
                       )}
                       {t.libelle}
-                      {t.kind === 'ponctuelle' && <span className="historique-badge">ajout</span>}
+                      {t.kind === 'ponctuelle' && <span className="historique-badge">{T.badges.ajout}</span>}
                     </li>
                   ))}
                 </ul>
@@ -116,9 +117,9 @@ export default function Historique() {
           })}
 
           <section className="historique-groupe">
-            <h3 className="historique-entete">Observations</h3>
+            <h3 className="historique-entete">{T.historique.observationsTitre}</h3>
             {observations.length === 0 ? (
-              <p className="historique-vide">Aucune observation ce jour-là.</p>
+              <p className="historique-vide">{T.historique.observationsVide}</p>
             ) : (
               <ul className="historique-liste">
                 {observations.map((obs) => (

@@ -1,4 +1,5 @@
-import { PERIODES, PERIODE_LABELS, PERIODE_ICONS, PERIODE_COULEURS } from '../../lib/constants'
+import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
+import { T } from '../../lib/textes'
 import TaskItem from './TaskItem'
 import './TaskList.css'
 
@@ -9,7 +10,7 @@ export default function TaskList({ taches, onToggle, disabled }) {
   })).filter((groupe) => groupe.taches.length > 0)
 
   if (parPeriode.length === 0) {
-    return <p className="task-list-vide">Aucune tâche prévue aujourd'hui.</p>
+    return <p className="task-list-vide">{T.salarie.tacheListeVide}</p>
   }
 
   return (
@@ -24,9 +25,9 @@ export default function TaskList({ taches, onToggle, disabled }) {
           >
             <h2 className="task-list-entete">
               <span className="task-list-icone" aria-hidden="true">
-                {PERIODE_ICONS[groupe.periode]}
+                {T.periodeIcones[groupe.periode]}
               </span>
-              {PERIODE_LABELS[groupe.periode]}
+              {T.periodes[groupe.periode]}
             </h2>
             <div className="task-list-items">
               {groupe.taches.map((tache) => (

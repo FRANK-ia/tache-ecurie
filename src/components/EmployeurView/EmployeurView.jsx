@@ -14,7 +14,8 @@ import {
   marquerObservationLue,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, getTachesOubliees, estJourNonTravaille } from '../../lib/calendarLogic'
-import { CONDITIONS, CONDITION_LABELS, PERIODES, PERIODE_LABELS } from '../../lib/constants'
+import { CONDITIONS, PERIODES } from '../../lib/constants'
+import { T } from '../../lib/textes'
 import Historique from '../Historique/Historique'
 import GestionTaches from '../GestionTaches/GestionTaches'
 import GestionComptes from '../GestionComptes/GestionComptes'
@@ -135,25 +136,25 @@ export default function EmployeurView({ employe, onDeconnexion }) {
           {aujourdhui.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
         <button className="employeur-deconnexion" onClick={onDeconnexion}>
-          {employe.prenom} · quitter
+          {employe.prenom} {T.commun.deconnexion}
         </button>
       </header>
 
       <nav className="employeur-onglets">
         <button className={onglet === 'jour' ? 'actif' : ''} onClick={() => setOnglet('jour')}>
-          Aujourd'hui
+          {T.employeurOnglets.jour}
         </button>
         <button className={onglet === 'historique' ? 'actif' : ''} onClick={() => setOnglet('historique')}>
-          Historique
+          {T.employeurOnglets.historique}
         </button>
         <button className={onglet === 'reglages' ? 'actif' : ''} onClick={() => setOnglet('reglages')}>
-          Réglages
+          {T.employeurOnglets.reglages}
         </button>
         <button className={onglet === 'comptes' ? 'actif' : ''} onClick={() => setOnglet('comptes')}>
-          Comptes
+          {T.employeurOnglets.comptes}
         </button>
         <button className={onglet === 'repos' ? 'actif' : ''} onClick={() => setOnglet('repos')}>
-          Repos
+          {T.employeurOnglets.repos}
         </button>
       </nav>
 
@@ -161,11 +162,11 @@ export default function EmployeurView({ employe, onDeconnexion }) {
 
       {onglet === 'jour' &&
         (chargement ? (
-          <p className="employeur-chargement">Chargement…</p>
+          <p className="employeur-chargement">{T.commun.chargement}</p>
         ) : (
           <div className="employeur-contenu">
             <section className="employeur-section">
-              <h2 className="employeur-section-titre">Conditions du jour</h2>
+              <h2 className="employeur-section-titre">{T.employeur.conditionsTitre}</h2>
               <div className="employeur-conditions">
                 {CONDITIONS.map((condition) => (
                   <button
@@ -174,18 +175,18 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                     onClick={() => toggleCondition(condition)}
                     disabled={enCours}
                   >
-                    {CONDITION_LABELS[condition]}
+                    {T.conditions[condition]}
                   </button>
                 ))}
               </div>
             </section>
 
             <section className="employeur-section">
-              <h2 className="employeur-section-titre">Ajouter une tâche ponctuelle</h2>
+              <h2 className="employeur-section-titre">{T.employeur.ponctuelleTitre}</h2>
               <form className="employeur-ponctuelle-form" onSubmit={ajouterPonctuelle}>
                 <input
                   type="text"
-                  placeholder="Libellé de la tâche"
+                  placeholder={T.employeur.ponctuellePlaceholder}
                   value={nouvellePonctuelle.libelle}
                   onChange={(e) => setNouvellePonctuelle((p) => ({ ...p, libelle: e.target.value }))}
                   className="employeur-ponctuelle-champ"
@@ -197,20 +198,20 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                 >
                   {PERIODES.map((p) => (
                     <option key={p} value={p}>
-                      {PERIODE_LABELS[p]}
+                      {T.periodes[p]}
                     </option>
                   ))}
                 </select>
                 <button type="submit" className="employeur-ponctuelle-bouton" disabled={enCours || !nouvellePonctuelle.libelle.trim()}>
-                  Ajouter
+                  {T.commun.ajouter}
                 </button>
               </form>
             </section>
 
             <section className="employeur-section">
-              <h2 className="employeur-section-titre">Tâches oubliées</h2>
+              <h2 className="employeur-section-titre">{T.employeur.oublieesTitre}</h2>
               {tachesOubliees.length === 0 ? (
-                <p className="employeur-vide">Rien à signaler.</p>
+                <p className="employeur-vide">{T.employeur.oublieesVide}</p>
               ) : (
                 <ul className="employeur-liste">
                   {tachesOubliees.map((t) => (
@@ -221,9 +222,9 @@ export default function EmployeurView({ employe, onDeconnexion }) {
             </section>
 
             <section className="employeur-section">
-              <h2 className="employeur-section-titre">Observations reçues</h2>
+              <h2 className="employeur-section-titre">{T.employeur.observationsTitre}</h2>
               {observations.length === 0 ? (
-                <p className="employeur-vide">Aucune observation non lue.</p>
+                <p className="employeur-vide">{T.employeur.observationsVide}</p>
               ) : (
                 <ul className="employeur-observations-liste">
                   {observations.map((obs) => (
@@ -233,7 +234,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                         {obs.employes?.prenom} · {new Date(obs.cree_le).toLocaleString('fr-FR')}
                       </p>
                       <button className="employeur-observation-lu" onClick={() => marquerLue(obs.id)} disabled={enCours}>
-                        Marquer comme lu
+                        {T.employeur.marquerLu}
                       </button>
                     </li>
                   ))}

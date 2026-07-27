@@ -1,26 +1,12 @@
-// Constantes métier ajustables. Valeurs par défaut à valider avec Frank (voir §11 du brief).
+// Constantes métier techniques (clés, couleurs, seuils). Les textes affichés à
+// l'écran (labels, boutons, messages) vivent dans src/lib/textes.js — c'est là
+// qu'il faut aller pour changer un mot, pas ici.
 
 // Ordre canonique des périodes (utilisé pour le tri et le regroupement partout dans
 // l'app) : matin → midi → journee → soir. Ne pas trier alphabétiquement.
 // ⚠️ 'gardiennage' n'est PAS une période : c'est une condition activable (comme le
 // gel), voir CONDITIONS plus bas. Ne pas la réintroduire ici.
 export const PERIODES = ['matin', 'midi', 'journee', 'soir']
-
-export const PERIODE_LABELS = {
-  matin: 'Matin',
-  midi: 'Midi',
-  journee: 'Dans la journée',
-  soir: 'Soir',
-}
-
-// Icônes des en-têtes de période (§7 — regroupement par période). 'journee' regroupe les
-// tâches sans horaire fixe (rouleau, herse) : icône neutre, distincte du soleil de midi.
-export const PERIODE_ICONS = {
-  matin: '🌅',
-  midi: '☀️',
-  journee: '🌤️',
-  soir: '🌇',
-}
 
 // Fond de carte : dépend UNIQUEMENT de la période, jamais d'un badge ni d'un état
 // (fait/inactif/conditionnel). Toutes les tâches d'une même période ont exactement
@@ -59,24 +45,6 @@ export const HEURE_FIN_PERIODE = {
 }
 
 export const CONDITIONS = ['pluie', 'gel', 'grandgel', 'gardiennage']
-
-export const CONDITION_LABELS = {
-  pluie: 'Pluie',
-  gel: 'Gel',
-  grandgel: 'Orage',
-  gardiennage: 'Gardiennage',
-}
-
-// Emoji préfixé devant le libellé des tâches conditionnelles (dérivé de
-// task_templates.condition, jamais saisi dans le libellé stocké en base).
-export const CONDITION_EMOJIS = {
-  pluie: '☔',
-  gel: '❄️',
-  grandgel: '🌩️',
-  gardiennage: '🌙',
-}
-
-export const JOURS_SEMAINE_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 // Alerte visuelle "nouveau/modifié" sur les tâches récurrentes (task_templates).
 export const DUREE_FRAICHEUR_HEURES = 48

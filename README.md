@@ -67,18 +67,38 @@ src/
   lib/
     calendarLogic.js      Fonctions pures de logique calendaire (§4 du brief), testées
     calendarLogic.test.js
-    constants.js          Constantes ajustables (périodes, saisons, horaires, conditions)
+    constants.js          Constantes techniques (clés, couleurs, seuils) — PAS de texte affiché
+    textes.js              TOUS les textes affichés à l'écran, éditables (voir section dédiée)
     api.js                Toutes les requêtes Supabase (lecture/écriture)
     session.js            Session employé en sessionStorage (pas de token, pas de localStorage)
   components/
     Login/                Sélection employé + saisie PIN
     SalarieView/           Écran salarié : liste des tâches du jour + observations
     EmployeurView/         Écran employeur : conditions, ponctuelles, tâches oubliées,
-                           observations, onglets Historique / Réglages
+                           observations, onglets Historique / Réglages / Comptes / Repos
     TaskList/              Liste de tâches groupée par période (TaskList + TaskItem)
     Historique/            Vue historique par date choisie
-    ReglageJours/          Réglage des jours d'une tâche à rouleau (jours_semaine)
+    GestionTaches/         Réglages : gestion des tâches récurrentes (créer/modifier/désactiver)
+    GestionComptes/        Renommer un compte / changer son PIN
+    GestionRepos/          Repos hebdomadaire + congés
 ```
+
+## Textes de l'interface (éditables sans coder)
+
+Tous les mots affichés à l'écran (titres, boutons, messages, labels de période/condition,
+badges...) sont regroupés dans **`src/lib/textes.js`**. C'est le seul fichier à modifier
+pour changer un mot affiché — pas besoin de toucher au reste du code.
+
+Le fichier a un commentaire d'explication en tête. En résumé :
+- change uniquement le texte entre guillemets, à droite des `:` ;
+- ne touche jamais aux noms à gauche des `:`, ni à la ponctuation (`,` `{` `}`) ;
+- certains textes contiennent un mot entre accolades (ex. `"Bonjour {prenom}"`) : c'est un
+  emplacement rempli automatiquement par le code (prénom, nombre de jours...) — garde-le
+  tel quel, change seulement les mots autour ;
+- après modification : `git commit` + `git push` → Vercel redéploie tout seul.
+
+Les données métier (libellés de tâches, prénoms, motifs de congé) ne sont PAS dans ce
+fichier : elles vivent dans Supabase et se modifient depuis l'app (Réglages, Comptes, Repos).
 
 ## Logique métier — récurrences (§4 et §12 du brief)
 

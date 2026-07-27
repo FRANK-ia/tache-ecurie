@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchEmployes, updateEmploye } from '../../lib/api'
+import { T } from '../../lib/textes'
 import './GestionComptes.css'
 
 const PIN_REGEX = /^[0-9]{4}$/
@@ -28,11 +29,11 @@ export default function GestionComptes() {
     const nouveauPin = (pins[employe.id] ?? '').trim()
 
     if (!nouveauPrenom) {
-      setErreurs((prev) => ({ ...prev, [employe.id]: 'Le prénom ne peut pas être vide.' }))
+      setErreurs((prev) => ({ ...prev, [employe.id]: T.comptes.erreurPrenomVide }))
       return
     }
     if (nouveauPin && !PIN_REGEX.test(nouveauPin)) {
-      setErreurs((prev) => ({ ...prev, [employe.id]: 'Le code doit contenir exactement 4 chiffres.' }))
+      setErreurs((prev) => ({ ...prev, [employe.id]: T.comptes.erreurPinInvalide }))
       return
     }
 
@@ -56,14 +57,11 @@ export default function GestionComptes() {
     }
   }
 
-  if (chargement) return <p className="comptes-chargement">Chargement…</p>
+  if (chargement) return <p className="comptes-chargement">{T.commun.chargement}</p>
 
   return (
     <div className="gestion-comptes">
-      <p className="comptes-intro">
-        Renomme un compte (le nom affiché sur l'écran de connexion) ou change son code PIN à 4
-        chiffres. Laisse le champ code vide pour ne pas le changer.
-      </p>
+      <p className="comptes-intro">{T.comptes.intro}</p>
 
       {erreurs.global && <p className="comptes-erreur">{erreurs.global}</p>}
 
@@ -71,10 +69,10 @@ export default function GestionComptes() {
         const enCours = enregistrement === employe.id
         return (
           <div key={employe.id} className="compte-carte">
-            <p className="compte-role">{employe.role === 'employeur' ? 'Employeur' : 'Salarié'}</p>
+            <p className="compte-role">{T.roles[employe.role]}</p>
 
             <label className="compte-champ">
-              Nom affiché
+              {T.comptes.champNom}
               <input
                 type="text"
                 value={prenoms[employe.id] ?? ''}
@@ -84,12 +82,12 @@ export default function GestionComptes() {
             </label>
 
             <label className="compte-champ">
-              Nouveau code PIN (4 chiffres)
+              {T.comptes.champPin}
               <input
                 type="text"
                 inputMode="numeric"
                 maxLength={4}
-                placeholder="••••"
+                placeholder={T.comptes.pinPlaceholder}
                 value={pins[employe.id] ?? ''}
                 onChange={(e) =>
                   setPins((prev) => ({ ...prev, [employe.id]: e.target.value.replace(/\D/g, '').slice(0, 4) }))
@@ -99,7 +97,7 @@ export default function GestionComptes() {
             </label>
 
             {erreurs[employe.id] && <p className="compte-erreur">{erreurs[employe.id]}</p>}
-            {succes === employe.id && <p className="compte-succes">Enregistré ✓</p>}
+            {succes === employe.id && <p className="compte-succes">{T.comptes.succes}</p>}
 
             <button
               type="button"
@@ -107,7 +105,7 @@ export default function GestionComptes() {
               onClick={() => enregistrer(employe)}
               disabled={enCours}
             >
-              Enregistrer
+              {T.comptes.enregistrerBouton}
             </button>
           </div>
         )

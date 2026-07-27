@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchEmployes, verifierPin } from '../../lib/api'
+import { T } from '../../lib/textes'
 import './Login.css'
 
 export default function Login({ onConnecte }) {
@@ -47,7 +48,7 @@ export default function Login({ onConnecte }) {
         if (employe) {
           onConnecte(employe)
         } else {
-          setErreur('Code incorrect. Réessaie.')
+          setErreur(T.login.codeIncorrect)
           setPin('')
         }
       })
@@ -56,12 +57,12 @@ export default function Login({ onConnecte }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin])
 
-  if (chargement) return <div className="login-loading">Chargement…</div>
+  if (chargement) return <div className="login-loading">{T.commun.chargement}</div>
 
   if (!employeSelectionne) {
     return (
       <div className="login-screen">
-        <h1 className="login-titre">Qui es-tu ?</h1>
+        <h1 className="login-titre">{T.login.titreChoix}</h1>
         {erreur && <p className="login-erreur">{erreur}</p>}
         <div className="login-liste-employes">
           {employes.map((employe) => (
@@ -77,10 +78,12 @@ export default function Login({ onConnecte }) {
   return (
     <div className="login-screen">
       <button className="login-retour" onClick={retour}>
-        ← Retour
+        {T.login.retour}
       </button>
-      <h1 className="login-titre">Bonjour {employeSelectionne.prenom}</h1>
-      <p className="login-sous-titre">Entre ton code à 4 chiffres</p>
+      <h1 className="login-titre">
+        {T.login.bonjour} {employeSelectionne.prenom}
+      </h1>
+      <p className="login-sous-titre">{T.login.sousTitre}</p>
       <div className="login-pin-affichage">
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className={`login-pin-case ${i < pin.length ? 'remplie' : ''}`} />
@@ -98,7 +101,7 @@ export default function Login({ onConnecte }) {
           0
         </button>
         <button className="login-touche login-touche-effacer" onClick={effacer} disabled={verification}>
-          ⌫
+          {T.login.effacer}
         </button>
       </div>
     </div>

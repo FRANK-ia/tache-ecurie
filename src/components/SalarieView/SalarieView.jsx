@@ -13,6 +13,7 @@ import {
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, getSaison, estJourNonTravaille } from '../../lib/calendarLogic'
 import { HORAIRE_SOIR } from '../../lib/constants'
+import { T, formatTexte } from '../../lib/textes'
 import TaskList from '../TaskList/TaskList'
 import './SalarieView.css'
 
@@ -128,44 +129,42 @@ export default function SalarieView({ employe, onDeconnexion }) {
             {aujourdhui.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
           <p className="salarie-saison">
-            Saison {saison === 'ete' ? 'été' : 'hiver'} — soir {HORAIRE_SOIR[saison]}
+            {formatTexte(T.salarie.saisonPrefixe, { saison: T.saisons[saison], horaire: HORAIRE_SOIR[saison] })}
           </p>
         </div>
         <button className="salarie-deconnexion" onClick={onDeconnexion}>
-          {employe.prenom} · quitter
+          {employe.prenom} {T.commun.deconnexion}
         </button>
       </header>
 
       {!repos && total > 0 && (
-        <p className="salarie-compteur">
-          {faites}/{total} faites
-        </p>
+        <p className="salarie-compteur">{formatTexte(T.salarie.compteur, { faites, total })}</p>
       )}
 
       {erreur && <p className="salarie-erreur">{erreur}</p>}
 
       {chargement ? (
-        <p className="salarie-chargement">Chargement des tâches…</p>
+        <p className="salarie-chargement">{T.salarie.chargementTaches}</p>
       ) : repos ? (
-        <p className="salarie-repos">Jour de repos — aucune tâche aujourd'hui.</p>
+        <p className="salarie-repos">{T.salarie.jourRepos}</p>
       ) : (
         <>
           <TaskList taches={taches} onToggle={toggle} disabled={enCours} />
 
           <form className="salarie-observations" onSubmit={envoyerObservation}>
             <label htmlFor="observation" className="salarie-observations-label">
-              Observation pour l'employeur
+              {T.salarie.observationLabel}
             </label>
             <textarea
               id="observation"
               className="salarie-observations-champ"
               value={observation}
               onChange={(e) => setObservation(e.target.value)}
-              placeholder="Un cheval boiteux, du matériel cassé…"
+              placeholder={T.salarie.observationPlaceholder}
               rows={3}
             />
             <button type="submit" className="salarie-observations-bouton" disabled={enCours || !observation.trim()}>
-              {observationEnvoyee ? 'Envoyé ✓' : 'Envoyer'}
+              {observationEnvoyee ? T.salarie.observationEnvoyee : T.salarie.observationBouton}
             </button>
           </form>
         </>
