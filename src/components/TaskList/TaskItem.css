@@ -1,3 +1,7 @@
+/* Le fond de carte dépend UNIQUEMENT de la période (--couleur-periode-fond, injectée
+   par le groupe parent) — jamais du badge ni de l'état "fait" ni du caractère
+   conditionnel. Ces signaux s'affichent PAR-DESSUS (badge plein, emoji, texte barré)
+   sans jamais toucher aux propriétés background / border-color de .task-item. */
 .task-item {
   width: 100%;
   min-height: var(--hauteur-tap-min);
@@ -10,11 +14,6 @@
   border-left: 4px solid var(--couleur-periode-bordure, var(--couleur-bordure));
   border-radius: var(--rayon);
   text-align: left;
-}
-
-.task-item-meteo {
-  background: var(--couleur-meteo-fond);
-  border-color: var(--couleur-meteo);
 }
 
 .task-item-case {
@@ -45,20 +44,11 @@
   color: var(--couleur-texte-attenue);
 }
 
+/* "Fait" : on grise le texte (ci-dessus) et on assourdit toute la carte par opacité,
+   plutôt que de remplacer le fond par du gris — la teinte de période reste
+   reconnaissable en transparence, juste plus discrète. */
 .task-item-fait {
-  background: #f0f0ee;
-}
-
-.task-item-nouveau {
-  background: var(--couleur-nouveau-fond);
-  border-color: var(--couleur-nouveau);
-  box-shadow: inset 4px 0 0 var(--couleur-nouveau);
-}
-
-.task-item-modifie {
-  background: var(--couleur-modifie-fond);
-  border-color: var(--couleur-modifie);
-  box-shadow: inset 4px 0 0 var(--couleur-modifie);
+  opacity: 0.65;
 }
 
 /* Badges pleins (fond soutenu + texte blanc) : trois signaux distincts qui ne se
@@ -72,16 +62,7 @@
   color: #fff;
   border-radius: 999px;
   padding: 3px 10px;
-}
-
-.task-item-badge-fraicheur.badge-nouveau {
-  background: var(--couleur-nouveau);
-}
-
-.task-item-badge-fraicheur.badge-modifie {
-  background: var(--couleur-modifie);
-}
-
-.task-item-badge-ajout {
-  background: var(--couleur-ajout);
+  /* Liseré blanc : garantit une bordure nette quel que soit le fond de période
+     derrière (notamment le badge bleu "Nouveau" sur le fond bleu pâle du matin). */
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
 }

@@ -4,6 +4,8 @@ import { statutFraicheur } from '../../lib/calendarLogic'
 import {
   PERIODES,
   PERIODE_LABELS,
+  PERIODE_COULEURS,
+  BADGE_COULEURS,
   CONDITIONS,
   CONDITION_LABELS,
   CONDITION_EMOJIS,
@@ -382,16 +384,16 @@ export default function GestionTaches() {
             const enCours = enregistrement === template.id
             const aJoursMultiples = template.jours_semaine !== null && template.jours_semaine !== undefined
             const fraicheur = statutFraicheur(template)
+            const couleurs = PERIODE_COULEURS[template.periode]
 
             return (
               <div
                 key={template.id}
-                className={`gestion-carte ${template.actif ? '' : 'inactif'} ${
-                  fraicheur === 'nouveau' ? 'nouvelle' : fraicheur === 'modifie' ? 'modifiee' : ''
-                }`}
+                className={`gestion-carte ${template.actif ? '' : 'inactif'}`}
+                style={{ '--couleur-periode-fond': couleurs?.fond, '--couleur-periode-bordure': couleurs?.bordure }}
               >
                 {fraicheur && (
-                  <span className={`gestion-badge-fraicheur ${fraicheur === 'nouveau' ? 'badge-nouveau' : 'badge-modifie'}`}>
+                  <span className="gestion-badge-fraicheur" style={{ background: BADGE_COULEURS[fraicheur] }}>
                     {fraicheur === 'nouveau' ? 'Nouveau' : 'Modifié'}
                   </span>
                 )}

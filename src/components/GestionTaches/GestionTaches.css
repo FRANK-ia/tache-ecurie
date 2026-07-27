@@ -36,11 +36,16 @@
   color: var(--couleur-texte-attenue);
 }
 
+/* Fond de carte piloté UNIQUEMENT par la période de la tâche (--couleur-periode-fond,
+   injectée par template inline depuis PERIODE_COULEURS) — jamais par le badge
+   nouveau/modifié ni par l'état actif/inactif. Ces signaux restent indépendants
+   (badge plein par-dessus, opacité réduite pour "inactif"). */
 .gestion-carte {
   border: 1px solid var(--couleur-bordure);
+  border-left: 4px solid var(--couleur-periode-bordure, var(--couleur-bordure));
   border-radius: var(--rayon);
   padding: 14px;
-  background: var(--couleur-carte);
+  background: var(--couleur-periode-fond, var(--couleur-carte));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -50,18 +55,6 @@
   opacity: 0.55;
 }
 
-.gestion-carte.nouvelle {
-  background: var(--couleur-nouveau-fond);
-  border-color: var(--couleur-nouveau);
-  box-shadow: inset 4px 0 0 var(--couleur-nouveau);
-}
-
-.gestion-carte.modifiee {
-  background: var(--couleur-modifie-fond);
-  border-color: var(--couleur-modifie);
-  box-shadow: inset 4px 0 0 var(--couleur-modifie);
-}
-
 .gestion-badge-fraicheur {
   align-self: flex-start;
   font-size: 12px;
@@ -69,14 +62,7 @@
   color: #fff;
   border-radius: 999px;
   padding: 3px 10px;
-}
-
-.gestion-badge-fraicheur.badge-nouveau {
-  background: var(--couleur-nouveau);
-}
-
-.gestion-badge-fraicheur.badge-modifie {
-  background: var(--couleur-modifie);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
 }
 
 .gestion-carte-entete {
