@@ -26,9 +26,10 @@ const RECURRENCE_ICONS = {
   intervalle: '⏱️',
 }
 
-// Classement "par famille" (§4) : chaque type de récurrence est une famille, et la
-// récurrence conditionnelle est elle-même éclatée en une sous-famille par condition
-// (pluie, gel, orage, gardiennage) plutôt que groupée en bloc.
+// Une entrée par type de récurrence (la conditionnelle éclatée par condition —
+// pluie, gel, orage, gardiennage) : sert de lookup icône+titre pour le badge de
+// récurrence affiché sur chaque carte (voir FAMILLES_PAR_CLE plus bas). Ne pilote
+// plus le regroupement de l'écran, qui se fait par période (voir parPeriode).
 const FAMILLES = [
   { cle: 'quotidienne', titre: T.familles.quotidienne, icone: RECURRENCE_ICONS.quotidienne },
   { cle: 'hebdo', titre: T.familles.hebdo, icone: RECURRENCE_ICONS.hebdo },
@@ -45,6 +46,12 @@ const FAMILLES = [
 function familleDe(template) {
   return template.recurrence === 'conditionnelle' ? `conditionnelle:${template.condition}` : template.recurrence
 }
+
+// Réglages groupe désormais par PÉRIODE (voir parPeriode plus bas) pour coller à
+// l'affichage salarié. FAMILLES sert uniquement à ce lookup icône+titre affiché en
+// badge sur chaque carte, pour que le type de récurrence reste visible malgré le
+// changement de regroupement.
+const FAMILLES_PAR_CLE = Object.fromEntries(FAMILLES.map((f) => [f.cle, f]))
 
 const RECURRENCE_VIDE = {
   recurrence: 'quotidienne',
@@ -390,14 +397,14 @@ export default function GestionTaches() {
     setRecurrenceErreur('')
   }
 
-  /** Monter/descendre (§ AJOUT 2) : échange `ordre` avec le voisin du MÊME GROUPE
-   * D'AFFICHAGE (même famille de récurrence, voir `familleDe` — c'est ce groupe qui est
-   * visible à l'écran, pas la période). Le tri au sein du groupe suit celui du rendu :
-   * l'ordre global `ordre` renvoyé déjà trié par `fetchTemplatesToutes` (src/lib/api.js).
+  /** Monter/descendre (§ AJOUT 2) : échange `ordre` avec le voisin de la MÊME PÉRIODE
+   * — c'est désormais aussi le périmètre affiché à l'écran (Réglages est groupé par
+   * période, comme la vue salarié), donc l'échange reste cohérent partout : plus
+   * d'écart entre le périmètre de déplacement et le périmètre affiché.
    * Persisté immédiatement en base. */
   async function deplacer(template, direction) {
     const siblings = templates
-      .filter((t) => familleDe(t) === familleDe(template))
+      .filter((t) => t.periode === template.periode)
       .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
     const index = siblings.findIndex((t) => t.id === template.id)
     const voisinIndex = direction === 'haut' ? index - 1 : index + 1
@@ -436,9 +443,19 @@ export default function GestionTaches() {
 
   if (chargement) return <p className="gestion-chargement">{T.commun.chargement}</p>
 
-  const parFamille = FAMILLES.map((f) => ({
-    ...f,
-    templates: templates.filter((t) => familleDe(t) === f.cle),
+  // Regroupement par PÉRIODE (matin/midi/journee/soir), trié par `ordre` — même
+  // structure que ce que voit le salarié (calendarLogic.js), pour que Réglages et
+  // l'écran salarié montrent la même chose et que le périmètre de `deplacer()`
+  // (ci-dessus) coïncide avec le périmètre affiché. Le tri explicite ici est ce qui
+  // rend le déplacement ▲▼ visible immédiatement : un simple `filter` aurait gardé
+  // l'ordre d'insertion du tableau `templates`, pas l'ordre à jour du champ `ordre`.
+  // L'information de récurrence (quotidienne/hebdo/conditionnelle...) ne disparaît
+  // pas : elle reste affichée par tâche via le badge `FAMILLES_PAR_CLE` plus bas.
+  const parPeriode = PERIODES.map((p) => ({
+    cle: p,
+    titre: T.periodes[p],
+    icone: T.periodeIcones[p],
+    templates: templates.filter((t) => t.periode === p).sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0)),
   })).filter((g) => g.templates.length > 0)
 
   return (
@@ -496,9 +513,9 @@ export default function GestionTaches() {
         )}
       </div>
 
-      {parFamille.length === 0 && <p className="gestion-vide">{T.reglages.vide}</p>}
+      {parPeriode.length === 0 && <p className="gestion-vide">{T.reglages.vide}</p>}
 
-      {parFamille.map((groupe) => (
+      {parPeriode.map((groupe) => (
         <section key={groupe.cle} className="gestion-groupe">
           <h2 className="gestion-groupe-entete">
             <span aria-hidden="true">{groupe.icone}</span> {groupe.titre}
@@ -511,12 +528,13 @@ export default function GestionTaches() {
             const couleurs = PERIODE_COULEURS[template.periode]
             const enEditionRecurrence = recurrenceEnEdition === template.id
 
-            const siblingsFamille = templates
-              .filter((t) => familleDe(t) === familleDe(template))
+            const siblingsPeriode = templates
+              .filter((t) => t.periode === template.periode)
               .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
-            const indexFamille = siblingsFamille.findIndex((t) => t.id === template.id)
-            const estPremierDeSaFamille = indexFamille <= 0
-            const estDernierDeSaFamille = indexFamille >= siblingsFamille.length - 1
+            const indexPeriode = siblingsPeriode.findIndex((t) => t.id === template.id)
+            const estPremierDeSaPeriode = indexPeriode <= 0
+            const estDernierDeSaPeriode = indexPeriode >= siblingsPeriode.length - 1
+            const infoFamille = FAMILLES_PAR_CLE[familleDe(template)]
 
             return (
               <div
@@ -535,7 +553,7 @@ export default function GestionTaches() {
                       type="button"
                       className="gestion-deplacer-bouton"
                       onClick={() => deplacer(template, 'haut')}
-                      disabled={enCours || estPremierDeSaFamille}
+                      disabled={enCours || estPremierDeSaPeriode}
                       title={T.reglages.monterBouton}
                     >
                       {T.reglages.monterBouton}
@@ -544,7 +562,7 @@ export default function GestionTaches() {
                       type="button"
                       className="gestion-deplacer-bouton"
                       onClick={() => deplacer(template, 'bas')}
-                      disabled={enCours || estDernierDeSaFamille}
+                      disabled={enCours || estDernierDeSaPeriode}
                       title={T.reglages.descendreBouton}
                     >
                       {T.reglages.descendreBouton}
@@ -603,17 +621,14 @@ export default function GestionTaches() {
                 </label>
 
                 <p className="gestion-recurrence">
-                  {formatTexte(T.reglages.recurrencePrefixe, { label: T.familles[template.recurrence] ?? template.recurrence })}
+                  <span className="gestion-badge-recurrence">
+                    <span aria-hidden="true">{infoFamille?.icone}</span> {infoFamille?.titre}
+                  </span>
                   {template.recurrence === 'intervalle' &&
                     ' ' + formatTexte(T.reglages.intervalleSuffixe, { n: template.intervalle_jours })}
                   {template.recurrence === 'mensuelle' &&
                     template.jours_mois &&
                     ' ' + formatTexte(T.reglages.moisSuffixe, { jours: template.jours_mois.join(', ') })}
-                  {template.recurrence === 'conditionnelle' &&
-                    ' ' +
-                      formatTexte(T.reglages.conditionSuffixe, {
-                        condition: T.conditions[template.condition] ?? template.condition,
-                      })}
                 </p>
 
                 {!enEditionRecurrence && (
