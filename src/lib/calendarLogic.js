@@ -165,6 +165,7 @@ export function buildDailyTaskList({
       periode: t.periode,
       ordre: t.ordre ?? 0,
       condition: t.condition ?? null,
+      recurrence: t.recurrence,
       fraicheur: statutFraicheur(t),
     })
   )
@@ -176,6 +177,7 @@ export function buildDailyTaskList({
     periode: p.periode,
     ordre: Number.POSITIVE_INFINITY,
     condition: null,
+    recurrence: null,
   }))
 
   const toutes = [...templatesAttendus, ...ponctuellesDuJour].sort((a, b) => a.ordre - b.ordre)

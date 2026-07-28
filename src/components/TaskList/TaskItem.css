@@ -37,6 +37,7 @@
 .task-item-libelle {
   flex: 1;
   font-size: 17px;
+  color: var(--couleur-periode-texte, var(--couleur-texte));
 }
 
 .task-item-fait .task-item-libelle {
@@ -62,7 +63,12 @@
   color: #fff;
   border-radius: 999px;
   padding: 3px 10px;
-  /* Liseré blanc : garantit une bordure nette quel que soit le fond de période
-     derrière (notamment le badge bleu "Nouveau" sur le fond bleu pâle du matin). */
-  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+  /* Double liseré (blanc puis sombre très transparent) : garantit une bordure
+     nette quel que soit le fond de période derrière, du niveau 1 le plus clair
+     (ex. bleu pâle du matin) au niveau 3 le plus foncé (rareté élevée) — un seul
+     anneau blanc perdait du contraste sur les fonds déjà soutenus (vérifié : le
+     badge "Modifié" descend à ~2.3:1 contre certains fonds de niveau 3). */
+  box-shadow:
+    0 0 0 1.5px rgba(255, 255, 255, 0.9),
+    0 0 0 2.5px rgba(0, 0, 0, 0.15);
 }

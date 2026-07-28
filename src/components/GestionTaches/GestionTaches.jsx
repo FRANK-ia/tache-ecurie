@@ -7,7 +7,7 @@ import {
   supprimerTemplateSiPossible,
 } from '../../lib/api'
 import { statutFraicheur } from '../../lib/calendarLogic'
-import { PERIODES, PERIODE_COULEURS, BADGE_COULEURS, CONDITIONS } from '../../lib/constants'
+import { PERIODES, BADGE_COULEURS, CONDITIONS, couleurTache } from '../../lib/constants'
 import { T, formatTexte } from '../../lib/textes'
 import './GestionTaches.css'
 
@@ -525,7 +525,7 @@ export default function GestionTaches() {
             const enCours = enregistrement === template.id
             const aJoursMultiples = template.jours_semaine !== null && template.jours_semaine !== undefined
             const fraicheur = statutFraicheur(template)
-            const couleurs = PERIODE_COULEURS[template.periode]
+            const couleurs = couleurTache(template.periode, template.recurrence)
             const enEditionRecurrence = recurrenceEnEdition === template.id
 
             const siblingsPeriode = templates
@@ -540,7 +540,11 @@ export default function GestionTaches() {
               <div
                 key={template.id}
                 className={`gestion-carte ${template.actif ? '' : 'inactif'}`}
-                style={{ '--couleur-periode-fond': couleurs?.fond, '--couleur-periode-bordure': couleurs?.bordure }}
+                style={{
+                  '--couleur-periode-fond': couleurs?.fond,
+                  '--couleur-periode-bordure': couleurs?.lisere,
+                  '--couleur-periode-texte': couleurs?.texte,
+                }}
               >
                 {fraicheur && (
                   <span className="gestion-badge-fraicheur" style={{ background: BADGE_COULEURS[fraicheur] }}>

@@ -1,15 +1,21 @@
-import { BADGE_COULEURS } from '../../lib/constants'
+import { BADGE_COULEURS, couleurTache } from '../../lib/constants'
 import { T } from '../../lib/textes'
 import './TaskItem.css'
 
 export default function TaskItem({ task, onToggle, disabled }) {
   const emoji = T.conditionEmojis[task.condition]
+  const couleurs = couleurTache(task.periode, task.recurrence)
 
   return (
     <button
       className={`task-item ${task.fait ? 'task-item-fait' : ''}`}
       onClick={() => onToggle(task)}
       disabled={disabled}
+      style={{
+        '--couleur-periode-fond': couleurs?.fond,
+        '--couleur-periode-bordure': couleurs?.lisere,
+        '--couleur-periode-texte': couleurs?.texte,
+      }}
     >
       <span className={`task-item-case ${task.fait ? 'cochee' : ''}`}>{task.fait ? '✓' : ''}</span>
       <span className="task-item-libelle">
