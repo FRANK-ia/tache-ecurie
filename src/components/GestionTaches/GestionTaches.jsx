@@ -390,12 +390,14 @@ export default function GestionTaches() {
     setRecurrenceErreur('')
   }
 
-  /** Monter/descendre (§ AJOUT 2) : échange `ordre` avec le voisin de la MÊME PÉRIODE
-   * (l'ordre est une séquence de travail par période, indépendante de la famille — voir
-   * le tri centralisé dans src/lib/api.js). Persisté immédiatement en base. */
+  /** Monter/descendre (§ AJOUT 2) : échange `ordre` avec le voisin du MÊME GROUPE
+   * D'AFFICHAGE (même famille de récurrence, voir `familleDe` — c'est ce groupe qui est
+   * visible à l'écran, pas la période). Le tri au sein du groupe suit celui du rendu :
+   * l'ordre global `ordre` renvoyé déjà trié par `fetchTemplatesToutes` (src/lib/api.js).
+   * Persisté immédiatement en base. */
   async function deplacer(template, direction) {
     const siblings = templates
-      .filter((t) => t.periode === template.periode)
+      .filter((t) => familleDe(t) === familleDe(template))
       .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
     const index = siblings.findIndex((t) => t.id === template.id)
     const voisinIndex = direction === 'haut' ? index - 1 : index + 1
@@ -509,12 +511,12 @@ export default function GestionTaches() {
             const couleurs = PERIODE_COULEURS[template.periode]
             const enEditionRecurrence = recurrenceEnEdition === template.id
 
-            const siblingsPeriode = templates
-              .filter((t) => t.periode === template.periode)
+            const siblingsFamille = templates
+              .filter((t) => familleDe(t) === familleDe(template))
               .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
-            const indexPeriode = siblingsPeriode.findIndex((t) => t.id === template.id)
-            const estPremierDeSaPeriode = indexPeriode <= 0
-            const estDernierDeSaPeriode = indexPeriode >= siblingsPeriode.length - 1
+            const indexFamille = siblingsFamille.findIndex((t) => t.id === template.id)
+            const estPremierDeSaFamille = indexFamille <= 0
+            const estDernierDeSaFamille = indexFamille >= siblingsFamille.length - 1
 
             return (
               <div
@@ -533,7 +535,7 @@ export default function GestionTaches() {
                       type="button"
                       className="gestion-deplacer-bouton"
                       onClick={() => deplacer(template, 'haut')}
-                      disabled={enCours || estPremierDeSaPeriode}
+                      disabled={enCours || estPremierDeSaFamille}
                       title={T.reglages.monterBouton}
                     >
                       {T.reglages.monterBouton}
@@ -542,7 +544,7 @@ export default function GestionTaches() {
                       type="button"
                       className="gestion-deplacer-bouton"
                       onClick={() => deplacer(template, 'bas')}
-                      disabled={enCours || estDernierDeSaPeriode}
+                      disabled={enCours || estDernierDeSaFamille}
                       title={T.reglages.descendreBouton}
                     >
                       {T.reglages.descendreBouton}
