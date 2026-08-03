@@ -120,7 +120,7 @@ export const T = {
     chargementTaches: 'Chargement des tâches…',
     jourRepos: "Jour de repos — aucune tâche aujourd'hui.",
     tacheListeVide: "Aucune tâche prévue aujourd'hui.",
-    observationLabel: "Observation pour l'employeur",
+    observationLabel: 'Observation pour Laetitia',
     observationPlaceholder: 'Un cheval boiteux, du matériel cassé…',
     observationBouton: 'Envoyer',
     observationEnvoyee: 'Envoyé ✓',
