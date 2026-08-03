@@ -23,6 +23,16 @@
   color: var(--couleur-texte-attenue);
 }
 
+.historique-situation {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-accent);
+  background: var(--couleur-accent-clair);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
 .historique-entete {
   display: flex;
   align-items: center;

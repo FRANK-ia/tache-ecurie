@@ -6,8 +6,10 @@ import {
   fetchConditionsDuJour,
   fetchDernieresCompletionsIntervalleAvant,
   fetchObservationsPourDate,
+  fetchJoursRepos,
+  fetchConges,
 } from '../../lib/api'
-import { buildDailyTaskList, toDateKey } from '../../lib/calendarLogic'
+import { buildDailyTaskList, toDateKey, typeJourNonTravaille } from '../../lib/calendarLogic'
 import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
 import { T } from '../../lib/textes'
 import './Historique.css'
@@ -18,6 +20,7 @@ export default function Historique() {
   const [erreur, setErreur] = useState('')
   const [taches, setTaches] = useState([])
   const [observations, setObservations] = useState([])
+  const [situationJour, setSituationJour] = useState(null)
 
   useEffect(() => {
     let annule = false
@@ -32,24 +35,35 @@ export default function Historique() {
         const estAujourdhui = dateChoisie === toDateKey(new Date())
         const templates = estAujourdhui ? toutesTemplates.filter((t) => t.actif) : toutesTemplates
         const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
-        const [ponctuelles, completions, conditions, dernieresCompletions, obs] = await Promise.all([
-          fetchPonctuellesDuJour(dateChoisie),
-          fetchCompletionsDuJour(dateChoisie),
-          fetchConditionsDuJour(dateChoisie),
-          fetchDernieresCompletionsIntervalleAvant(templatesIntervalle.map((t) => t.id), dateChoisie),
-          fetchObservationsPourDate(dateChoisie),
-        ])
+        const [ponctuelles, completions, conditions, dernieresCompletions, obs, joursRepos, conges] =
+          await Promise.all([
+            fetchPonctuellesDuJour(dateChoisie),
+            fetchCompletionsDuJour(dateChoisie),
+            fetchConditionsDuJour(dateChoisie),
+            fetchDernieresCompletionsIntervalleAvant(templatesIntervalle.map((t) => t.id), dateChoisie),
+            fetchObservationsPourDate(dateChoisie),
+            fetchJoursRepos(),
+            fetchConges(),
+          ])
         if (annule) return
         const [annee, mois, jour] = dateChoisie.split('-').map(Number)
         const dateObj = new Date(annee, mois - 1, jour)
-        const liste = buildDailyTaskList({
-          templates,
-          ponctuelles,
-          completions,
-          date: dateObj,
-          activeConditions: conditions,
-          lastCompletionByTemplateId: dernieresCompletions,
-        })
+        // Repos hebdo / congé (§ historique) : personne n'était censé travailler ce
+        // jour-là, donc pas de liste de tâches "non réalisées" — juste un rappel de
+        // la situation. On construit quand même `taches` à vide plutôt que de ne pas
+        // l'appeler, pour garder un seul chemin de code.
+        const situation = typeJourNonTravaille(dateObj, joursRepos, conges)
+        setSituationJour(situation)
+        const liste = situation
+          ? []
+          : buildDailyTaskList({
+              templates,
+              ponctuelles,
+              completions,
+              date: dateObj,
+              activeConditions: conditions,
+              lastCompletionByTemplateId: dernieresCompletions,
+            })
         setTaches(liste)
         setObservations(obs)
       } catch (e) {
@@ -85,8 +99,15 @@ export default function Historique() {
         <p className="historique-chargement">{T.commun.chargement}</p>
       ) : (
         <>
-          {parPeriode.length === 0 && <p className="historique-vide">{T.historique.tachesVide}</p>}
-          {parPeriode.map((groupe) => {
+          {situationJour && (
+            <p className="historique-situation">
+              {situationJour === 'conge' ? T.historique.jourConge : T.historique.jourRepos}
+            </p>
+          )}
+          {!situationJour && parPeriode.length === 0 && (
+            <p className="historique-vide">{T.historique.tachesVide}</p>
+          )}
+          {!situationJour && parPeriode.map((groupe) => {
             const couleurs = PERIODE_COULEURS[groupe.periode]
             return (
               <section

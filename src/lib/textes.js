@@ -150,6 +150,8 @@ export const T = {
   // ---- Historique ----
   historique: {
     tachesVide: 'Aucune tâche attendue ce jour-là.',
+    jourRepos: 'Repos',
+    jourConge: 'Congés',
     observationsTitre: 'Observations',
     observationsVide: 'Aucune observation ce jour-là.',
   },

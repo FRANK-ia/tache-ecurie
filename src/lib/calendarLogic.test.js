@@ -12,6 +12,7 @@ import {
   getTachesOubliees,
   statutFraicheur,
   estJourNonTravaille,
+  typeJourNonTravaille,
 } from './calendarLogic'
 
 describe('isoDayOfWeek', () => {
@@ -77,6 +78,27 @@ describe('estJourNonTravaille', () => {
 
   it('aucun repos ni congé configuré -> toujours travaillé', () => {
     expect(estJourNonTravaille(new Date(2026, 6, 26), [], [])).toBe(false)
+  })
+})
+
+describe('typeJourNonTravaille (§ historique : repos vs congé)', () => {
+  it('jour travaillé -> null', () => {
+    expect(typeJourNonTravaille(new Date(2026, 6, 20), [7], [])).toBe(null)
+  })
+
+  it('repos hebdo seul -> "repos"', () => {
+    expect(typeJourNonTravaille(new Date(2026, 6, 26), [7], [])).toBe('repos')
+  })
+
+  it('congé seul -> "conge"', () => {
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }]
+    expect(typeJourNonTravaille(new Date(2026, 7, 10), [], conges)).toBe('conge')
+  })
+
+  it('jour à la fois repos hebdo et dans une plage de congés -> "conge" prioritaire', () => {
+    const dimanche = new Date(2026, 7, 9)
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }]
+    expect(typeJourNonTravaille(dimanche, [7], conges)).toBe('conge')
   })
 })
 

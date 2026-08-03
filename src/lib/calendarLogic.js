@@ -31,9 +31,19 @@ export function toDateKey(date) {
  * remplaçant, aucune completion fantôme générée.
  */
 export function estJourNonTravaille(date, joursRepos = [], conges = []) {
-  if (joursRepos.includes(isoDayOfWeek(date))) return true
+  return typeJourNonTravaille(date, joursRepos, conges) !== null
+}
+
+/**
+ * Précise LEQUEL des deux motifs de jour non travaillé s'applique (§ historique) :
+ * 'conge' (congé posé, prioritaire — c'est l'info la plus spécifique/délibérée pour
+ * ce jour précis), 'repos' (repos hebdomadaire fixe), ou null si le jour est travaillé.
+ */
+export function typeJourNonTravaille(date, joursRepos = [], conges = []) {
   const jour = toDateKey(date)
-  return conges.some((c) => jour >= c.date_debut && jour <= c.date_fin)
+  if (conges.some((c) => jour >= c.date_debut && jour <= c.date_fin)) return 'conge'
+  if (joursRepos.includes(isoDayOfWeek(date))) return 'repos'
+  return null
 }
 
 /** Nombre de jours entre deux clés 'YYYY-MM-DD' (b - a), en ignorant l'heure. */
