@@ -60,6 +60,56 @@
   padding: 60px 0;
 }
 
+.salarie-commentaires {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.salarie-commentaires-titre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--couleur-accent);
+}
+
+.salarie-commentaires-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.salarie-commentaire {
+  border: 1px solid var(--couleur-accent);
+  background: var(--couleur-accent-clair);
+  border-radius: var(--rayon);
+  padding: 12px;
+}
+
+.salarie-commentaire-texte {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.salarie-commentaire-meta {
+  font-size: 12px;
+  color: var(--couleur-texte-attenue);
+  margin-bottom: 8px;
+}
+
+.salarie-commentaire-lu {
+  background: none;
+  border: 1px solid var(--couleur-accent);
+  color: var(--couleur-accent);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .salarie-observations {
   margin-top: auto;
   padding-top: 20px;

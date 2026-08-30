@@ -7,11 +7,13 @@ import {
   fetchDernieresCompletionsIntervalle,
   fetchJoursRepos,
   fetchConges,
+  fetchReposExceptions,
   activerCondition,
   desactiverCondition,
   insertPonctuelle,
   fetchObservationsNonLues,
   marquerObservationLue,
+  insertObservation,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, getTachesOubliees, estJourNonTravaille } from '../../lib/calendarLogic'
 import { CONDITIONS, PERIODES } from '../../lib/constants'
@@ -31,6 +33,8 @@ export default function EmployeurView({ employe, onDeconnexion }) {
   const [observations, setObservations] = useState([])
   const [nouvellePonctuelle, setNouvellePonctuelle] = useState({ libelle: '', periode: 'matin' })
   const [enCours, setEnCours] = useState(false)
+  const [commentaire, setCommentaire] = useState('')
+  const [commentaireEnvoye, setCommentaireEnvoye] = useState(false)
 
   const aujourdhui = useMemo(() => new Date(), [])
   const jourKey = toDateKey(aujourdhui)
@@ -39,10 +43,11 @@ export default function EmployeurView({ employe, onDeconnexion }) {
     setChargement(true)
     setErreur('')
     try {
-      const [templates, joursRepos, conges] = await Promise.all([
+      const [templates, joursRepos, conges, exceptions] = await Promise.all([
         fetchTemplates(),
         fetchJoursRepos(),
         fetchConges(),
+        fetchReposExceptions(),
       ])
       const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
       const [ponctuelles, completions, conditions, dernieresCompletions, obs] = await Promise.all([
@@ -50,7 +55,7 @@ export default function EmployeurView({ employe, onDeconnexion }) {
         fetchCompletionsDuJour(jourKey),
         fetchConditionsDuJour(jourKey),
         fetchDernieresCompletionsIntervalle(templatesIntervalle.map((t) => t.id)),
-        fetchObservationsNonLues(),
+        fetchObservationsNonLues('salarie_vers_employeur'),
       ])
       const liste = buildDailyTaskList({
         templates,
@@ -62,7 +67,9 @@ export default function EmployeurView({ employe, onDeconnexion }) {
       })
       setConditionsActives(conditions)
       // Pas d'oubliées un jour de repos/congé — personne n'est censé être sur place.
-      setTachesOubliees(estJourNonTravaille(aujourdhui, joursRepos, conges) ? [] : getTachesOubliees(liste))
+      setTachesOubliees(
+        estJourNonTravaille(aujourdhui, joursRepos, conges, exceptions) ? [] : getTachesOubliees(liste)
+      )
       setObservations(obs)
     } catch (e) {
       setErreur(e.message)
@@ -110,6 +117,28 @@ export default function EmployeurView({ employe, onDeconnexion }) {
       })
       setNouvellePonctuelle({ libelle: '', periode: 'matin' })
       await charger()
+    } catch (e) {
+      setErreur(e.message)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  async function envoyerCommentaire(e) {
+    e.preventDefault()
+    if (!commentaire.trim()) return
+    setEnCours(true)
+    setErreur('')
+    try {
+      await insertObservation({
+        employeId: employe.id,
+        texte: commentaire.trim(),
+        jour: jourKey,
+        direction: 'employeur_vers_salarie',
+      })
+      setCommentaire('')
+      setCommentaireEnvoye(true)
+      setTimeout(() => setCommentaireEnvoye(false), 3000)
     } catch (e) {
       setErreur(e.message)
     } finally {
@@ -234,12 +263,32 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                         {obs.employes?.prenom} · {new Date(obs.cree_le).toLocaleString('fr-FR')}
                       </p>
                       <button className="employeur-observation-lu" onClick={() => marquerLue(obs.id)} disabled={enCours}>
-                        {T.employeur.marquerLu}
+                        {T.commun.marquerLu}
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className="employeur-section">
+              <h2 className="employeur-section-titre">{T.employeur.commentaireTitre}</h2>
+              <form className="employeur-commentaire-form" onSubmit={envoyerCommentaire}>
+                <textarea
+                  className="employeur-commentaire-champ"
+                  value={commentaire}
+                  onChange={(e) => setCommentaire(e.target.value)}
+                  placeholder={T.employeur.commentairePlaceholder}
+                  rows={3}
+                />
+                <button
+                  type="submit"
+                  className="employeur-commentaire-bouton"
+                  disabled={enCours || !commentaire.trim()}
+                >
+                  {commentaireEnvoye ? T.salarie.observationEnvoyee : T.salarie.observationBouton}
+                </button>
+              </form>
             </section>
           </div>
         ))}

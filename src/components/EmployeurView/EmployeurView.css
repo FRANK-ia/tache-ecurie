@@ -169,3 +169,32 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+.employeur-commentaire-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.employeur-commentaire-champ {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.employeur-commentaire-bouton {
+  min-height: var(--hauteur-tap-min);
+  background: var(--couleur-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--rayon);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.employeur-commentaire-bouton:disabled {
+  opacity: 0.6;
+}

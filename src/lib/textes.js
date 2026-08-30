@@ -44,6 +44,9 @@ export const T = {
     ajouter: 'Ajouter',
     annuler: 'Annuler',
     enregistrer: 'Enregistrer',
+    // Partagé par les deux sens de commentaires (salarié→Laetitia et Laetitia→salarié) :
+    // même bouton, même effet (passe en lu, quitte la vue active).
+    marquerLu: 'Marquer comme lu',
   },
 
   // ---- Labels par clé technique (période, condition, rôle, jour, famille) ----
@@ -124,6 +127,7 @@ export const T = {
     observationPlaceholder: 'Un cheval boiteux, du matériel cassé…',
     observationBouton: 'Envoyer',
     observationEnvoyee: 'Envoyé ✓',
+    commentairesTitre: 'Message de Laetitia',
   },
 
   // ---- Écran employeur — onglets ----
@@ -144,7 +148,8 @@ export const T = {
     oublieesVide: 'Rien à signaler.',
     observationsTitre: 'Observations reçues',
     observationsVide: 'Aucune observation non lue.',
-    marquerLu: 'Marquer comme lu',
+    commentaireTitre: 'Commentaire pour le salarié',
+    commentairePlaceholder: 'Une consigne, un rappel…',
   },
 
   // ---- Historique ----
@@ -217,7 +222,7 @@ export const T = {
     succes: 'Enregistré ✓',
   },
 
-  // ---- Repos (repos hebdo + congés) ----
+  // ---- Repos (repos hebdo + congés + exceptions ponctuelles) ----
   repos: {
     hebdoTitre: 'Repos hebdomadaire',
     hebdoIntro: 'Jour(s) où le centre ne fonctionne pas, chaque semaine.',
@@ -232,5 +237,23 @@ export const T = {
     congesVide: 'Aucun congé prévu.',
     confirmRetraitConge: 'Retirer ce congé ?',
     retirerBouton: 'Retirer',
+    exceptionAjoutTitre: 'Exception ponctuelle',
+    exceptionIntro:
+      'Décale le repos pour un jour précis, sans toucher à la règle du repos hebdomadaire ' +
+      '(ex : le salarié travaille ce dimanche et prend son repos le jeudi à la place).',
+    champDate: 'Date',
+    champType: 'Ce jour-là',
+    optionExceptionRepos: 'Repos',
+    optionExceptionTravaille: 'Travaillé',
+    erreurDateManquante: 'Indique une date.',
+    exceptionsAVenirTitre: 'Exceptions à venir',
+    exceptionsVide: 'Aucune exception prévue.',
+    confirmRetraitException: 'Retirer cette exception ? Le jour reprendra la règle habituelle.',
+  },
+
+  // ---- Sens des commentaires (Historique) ----
+  directions: {
+    salarie_vers_employeur: 'Laetitia',
+    employeur_vers_salarie: 'Salarié',
   },
 }

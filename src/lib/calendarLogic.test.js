@@ -102,6 +102,46 @@ describe('typeJourNonTravaille (§ historique : repos vs congé)', () => {
   })
 })
 
+describe('typeJourNonTravaille — exceptions ponctuelles (repos_exceptions), ordre strict', () => {
+  // Semaine du décalage dimanche <-> jeudi de la consigne : dimanche 2026-08-09
+  // (repos hebdo) forcé travaillé, jeudi 2026-08-13 (normalement travaillé) forcé repos.
+  const dimanche = new Date(2026, 7, 9)
+  const jeudi = new Date(2026, 7, 13)
+  const dimancheSuivant = new Date(2026, 7, 16)
+
+  it("1. exception 'travaille' un dimanche de repos hebdo -> TRAVAILLÉ, prime sur tout", () => {
+    const exceptions = [{ jour: '2026-08-09', type: 'travaille' }]
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }] // même si aussi en congé
+    expect(typeJourNonTravaille(dimanche, [7], conges, exceptions)).toBe(null)
+  })
+
+  it("2. exception 'repos' un jeudi normalement travaillé -> REPOS", () => {
+    const exceptions = [{ jour: '2026-08-13', type: 'repos' }]
+    expect(typeJourNonTravaille(jeudi, [7], [], exceptions)).toBe('repos')
+  })
+
+  it('3. pas d\'exception ce jour-là -> congé toujours pris en compte', () => {
+    const exceptions = [{ jour: '2026-08-13', type: 'repos' }] // vise un autre jour
+    const conges = [{ date_debut: '2026-08-01', date_fin: '2026-08-15' }]
+    expect(typeJourNonTravaille(dimanche, [], conges, exceptions)).toBe('conge')
+  })
+
+  it('4. pas d\'exception ni de congé ce jour-là -> repos hebdo toujours pris en compte', () => {
+    const exceptions = [{ jour: '2026-08-13', type: 'repos' }] // vise un autre jour
+    expect(typeJourNonTravaille(dimanche, [7], [], exceptions)).toBe('repos')
+  })
+
+  it('5. aucune règle ne matche -> TRAVAILLÉ', () => {
+    const exceptions = [{ jour: '2026-08-13', type: 'repos' }] // vise un autre jour
+    expect(typeJourNonTravaille(dimanche, [1], [], exceptions)).toBe(null)
+  })
+
+  it('la règle permanente (repos hebdo dimanche) reste intacte les autres semaines', () => {
+    const exceptions = [{ jour: '2026-08-09', type: 'travaille' }] // ne vise que ce dimanche-là
+    expect(typeJourNonTravaille(dimancheSuivant, [7], [], exceptions)).toBe('repos')
+  })
+})
+
 describe('getSaison (bascule sur le vrai changement d\'heure européen)', () => {
   // 2026 : dernier dimanche de mars = 29/03, dernier dimanche d'octobre = 25/10.
   it('bascule de printemps 2026 (29 mars)', () => {

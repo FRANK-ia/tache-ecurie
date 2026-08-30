@@ -232,22 +232,25 @@ export async function desactiverCondition(jour, condition) {
   return unwrap(res)
 }
 
-// ---- Observations ----
+// ---- Observations (bidirectionnelles : salarie_vers_employeur / employeur_vers_salarie) ----
 
-export async function insertObservation({ employeId, texte, jour }) {
+export async function insertObservation({ employeId, texte, jour, direction = 'salarie_vers_employeur' }) {
   const res = await supabase
     .from('observations')
-    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, jour, lu: false })
+    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, jour, lu: false, direction })
     .select()
     .single()
   return unwrap(res)
 }
 
-export async function fetchObservationsNonLues() {
+/** Non lues d'UN SEUL sens — toujours filtrer par `direction` pour ne jamais mélanger
+ * les messages salarié→employeur et employeur→salarié. */
+export async function fetchObservationsNonLues(direction) {
   const res = await supabase
     .from('observations')
     .select('*, employes(prenom)')
     .eq('centre_id', CENTRE_ID)
+    .eq('direction', direction)
     .eq('lu', false)
     .order('cree_le', { ascending: false })
   return unwrap(res)
@@ -298,10 +301,35 @@ export async function insertConge({ dateDebut, dateFin, motif }) {
 }
 
 /**
- * Seul DELETE de toute l'app : les congés sont un réglage ponctuel, pas une donnée
- * d'historique métier référencée ailleurs (contrairement à task_templates/task_completions).
+ * DELETE autorisé (comme supprimerReposException plus bas) : les congés sont un
+ * réglage ponctuel, pas une donnée d'historique métier référencée ailleurs
+ * (contrairement à task_templates/task_completions).
  */
 export async function supprimerConge(id) {
   const res = await supabase.from('jours_conges').delete().eq('id', id)
+  return unwrap(res)
+}
+
+// ---- Exceptions ponctuelles au repos hebdo (un jour précis surchargé) ----
+
+/** Toutes les exceptions du centre — le filtrage passé/à venir se fait côté appelant. */
+export async function fetchReposExceptions() {
+  const res = await supabase.from('repos_exceptions').select('*').eq('centre_id', CENTRE_ID).order('jour')
+  return unwrap(res)
+}
+
+export async function insertReposException({ jour, type }) {
+  const res = await supabase
+    .from('repos_exceptions')
+    .insert({ centre_id: CENTRE_ID, jour, type })
+    .select()
+    .single()
+  return unwrap(res)
+}
+
+/** DELETE autorisé, comme pour les congés (supprimerConge) : réglage ponctuel, pas
+ * une donnée d'historique métier. */
+export async function supprimerReposException(id) {
+  const res = await supabase.from('repos_exceptions').delete().eq('id', id)
   return unwrap(res)
 }

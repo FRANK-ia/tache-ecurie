@@ -7,9 +7,12 @@ import {
   fetchDernieresCompletionsIntervalle,
   fetchJoursRepos,
   fetchConges,
+  fetchReposExceptions,
   cocherTache,
   decocherTache,
   insertObservation,
+  fetchObservationsNonLues,
+  marquerObservationLue,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, getSaison, estJourNonTravaille } from '../../lib/calendarLogic'
 import { HORAIRE_SOIR } from '../../lib/constants'
@@ -25,6 +28,7 @@ export default function SalarieView({ employe, onDeconnexion }) {
   const [enCours, setEnCours] = useState(false)
   const [observation, setObservation] = useState('')
   const [observationEnvoyee, setObservationEnvoyee] = useState(false)
+  const [commentaires, setCommentaires] = useState([])
 
   const aujourdhui = useMemo(() => new Date(), [])
   const jourKey = toDateKey(aujourdhui)
@@ -34,8 +38,16 @@ export default function SalarieView({ employe, onDeconnexion }) {
     setChargement(true)
     setErreur('')
     try {
-      const [joursRepos, conges] = await Promise.all([fetchJoursRepos(), fetchConges()])
-      if (estJourNonTravaille(aujourdhui, joursRepos, conges)) {
+      const [joursRepos, conges, exceptions, commentairesEmployeur] = await Promise.all([
+        fetchJoursRepos(),
+        fetchConges(),
+        fetchReposExceptions(),
+        fetchObservationsNonLues('employeur_vers_salarie'),
+      ])
+      // Les commentaires de Laetitia sont indépendants du statut travaillé/repos du
+      // jour (un mot peut arriver même un jour de repos) : chargés dans tous les cas.
+      setCommentaires(commentairesEmployeur)
+      if (estJourNonTravaille(aujourdhui, joursRepos, conges, exceptions)) {
         setRepos(true)
         setTaches([])
         return
@@ -102,6 +114,18 @@ export default function SalarieView({ employe, onDeconnexion }) {
     }
   }
 
+  async function marquerCommentaireLu(id) {
+    setEnCours(true)
+    try {
+      await marquerObservationLue(id)
+      setCommentaires((prev) => prev.filter((c) => c.id !== id))
+    } catch (e) {
+      setErreur(e.message)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
   async function envoyerObservation(e) {
     e.preventDefault()
     if (!observation.trim()) return
@@ -142,6 +166,28 @@ export default function SalarieView({ employe, onDeconnexion }) {
       )}
 
       {erreur && <p className="salarie-erreur">{erreur}</p>}
+
+      {!chargement && commentaires.length > 0 && (
+        <section className="salarie-commentaires">
+          <h2 className="salarie-commentaires-titre">{T.salarie.commentairesTitre}</h2>
+          <ul className="salarie-commentaires-liste">
+            {commentaires.map((c) => (
+              <li key={c.id} className="salarie-commentaire">
+                <p className="salarie-commentaire-texte">{c.texte}</p>
+                <p className="salarie-commentaire-meta">{new Date(c.cree_le).toLocaleString('fr-FR')}</p>
+                <button
+                  type="button"
+                  className="salarie-commentaire-lu"
+                  onClick={() => marquerCommentaireLu(c.id)}
+                  disabled={enCours}
+                >
+                  {T.commun.marquerLu}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {chargement ? (
         <p className="salarie-chargement">{T.salarie.chargementTaches}</p>

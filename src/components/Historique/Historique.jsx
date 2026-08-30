@@ -8,6 +8,7 @@ import {
   fetchObservationsPourDate,
   fetchJoursRepos,
   fetchConges,
+  fetchReposExceptions,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, typeJourNonTravaille } from '../../lib/calendarLogic'
 import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
@@ -35,7 +36,7 @@ export default function Historique() {
         const estAujourdhui = dateChoisie === toDateKey(new Date())
         const templates = estAujourdhui ? toutesTemplates.filter((t) => t.actif) : toutesTemplates
         const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
-        const [ponctuelles, completions, conditions, dernieresCompletions, obs, joursRepos, conges] =
+        const [ponctuelles, completions, conditions, dernieresCompletions, obs, joursRepos, conges, exceptions] =
           await Promise.all([
             fetchPonctuellesDuJour(dateChoisie),
             fetchCompletionsDuJour(dateChoisie),
@@ -44,6 +45,7 @@ export default function Historique() {
             fetchObservationsPourDate(dateChoisie),
             fetchJoursRepos(),
             fetchConges(),
+            fetchReposExceptions(),
           ])
         if (annule) return
         const [annee, mois, jour] = dateChoisie.split('-').map(Number)
@@ -52,7 +54,7 @@ export default function Historique() {
         // jour-là, donc pas de liste de tâches "non réalisées" — juste un rappel de
         // la situation. On construit quand même `taches` à vide plutôt que de ne pas
         // l'appeler, pour garder un seul chemin de code.
-        const situation = typeJourNonTravaille(dateObj, joursRepos, conges)
+        const situation = typeJourNonTravaille(dateObj, joursRepos, conges, exceptions)
         setSituationJour(situation)
         const liste = situation
           ? []
@@ -145,7 +147,14 @@ export default function Historique() {
               <ul className="historique-liste">
                 {observations.map((obs) => (
                   <li key={obs.id}>
-                    {obs.employes?.prenom} : {obs.texte}
+                    <span className="historique-observation-sens">
+                      {obs.employes?.prenom} → {T.directions[obs.direction]}
+                    </span>{' '}
+                    <span className="historique-observation-heure">
+                      ({new Date(obs.cree_le).toLocaleString('fr-FR')})
+                    </span>
+                    <br />
+                    {obs.texte}
                   </li>
                 ))}
               </ul>

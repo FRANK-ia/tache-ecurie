@@ -13,7 +13,8 @@ centre.
 
 À faire :
 - Activer RLS sur `centres`, `employes`, `task_templates`, `task_completions`,
-  `task_ponctuelles`, `observations`, `conditions_jour`.
+  `task_ponctuelles`, `observations`, `conditions_jour`, `jours_conges`,
+  `repos_exceptions`.
 - Écrire des policies restreignant chaque opération (`select`/`insert`/`update`/`delete`)
   au `centre_id` de l'utilisateur authentifié (via `auth.uid()` une fois le point 2 fait).
 

@@ -25,22 +25,33 @@ export function toDateKey(date) {
 
 /**
  * Vrai si `date` est un jour non travaillé pour le centre : repos hebdomadaire fixe
- * (`joursRepos`, tableau ISO 1=lundi..7=dimanche, ex {7} pour dimanche) OU compris dans
- * une plage de `conges` ({ date_debut, date_fin } au format 'YYYY-MM-DD').
+ * (`joursRepos`, tableau ISO 1=lundi..7=dimanche, ex {7} pour dimanche), congé
+ * (`conges`), ou exception ponctuelle (`exceptions`, voir typeJourNonTravaille).
  * V1 mono-salarié : un jour non travaillé = écran vide côté salarié, pas de gestion de
  * remplaçant, aucune completion fantôme générée.
  */
-export function estJourNonTravaille(date, joursRepos = [], conges = []) {
-  return typeJourNonTravaille(date, joursRepos, conges) !== null
+export function estJourNonTravaille(date, joursRepos = [], conges = [], exceptions = []) {
+  return typeJourNonTravaille(date, joursRepos, conges, exceptions) !== null
 }
 
 /**
- * Précise LEQUEL des deux motifs de jour non travaillé s'applique (§ historique) :
- * 'conge' (congé posé, prioritaire — c'est l'info la plus spécifique/délibérée pour
- * ce jour précis), 'repos' (repos hebdomadaire fixe), ou null si le jour est travaillé.
+ * Précise LEQUEL des motifs de jour non travaillé s'applique (§ historique), dans
+ * un ORDRE STRICT où chaque règle prime sur les suivantes :
+ *   1. Exception ponctuelle 'travaille' pour CE jour précis (`repos_exceptions`)
+ *      -> TRAVAILLÉ (null), prime sur tout le reste — c'est la surcharge la plus
+ *      spécifique possible (ex. le salarié travaille exceptionnellement un dimanche).
+ *   2. Exception ponctuelle 'repos' pour ce jour -> 'repos'.
+ *   3. Congé (`conges`) couvrant ce jour -> 'conge'.
+ *   4. Jour ISO ∈ `joursRepos` (repos hebdo fixe) -> 'repos'.
+ *   5. Sinon -> TRAVAILLÉ (null).
+ * Une exception ne modifie JAMAIS la règle permanente (`joursRepos` / `conges`) : elle
+ * ne vaut que pour le jour exact qu'elle cible.
  */
-export function typeJourNonTravaille(date, joursRepos = [], conges = []) {
+export function typeJourNonTravaille(date, joursRepos = [], conges = [], exceptions = []) {
   const jour = toDateKey(date)
+  const exception = exceptions.find((e) => e.jour === jour)
+  if (exception?.type === 'travaille') return null
+  if (exception?.type === 'repos') return 'repos'
   if (conges.some((c) => jour >= c.date_debut && jour <= c.date_fin)) return 'conge'
   if (joursRepos.includes(isoDayOfWeek(date))) return 'repos'
   return null
