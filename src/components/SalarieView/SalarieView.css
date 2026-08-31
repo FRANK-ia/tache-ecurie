@@ -146,3 +146,13 @@
   font-size: 15px;
   font-weight: 600;
 }
+
+.salarie-observations-bouton:disabled {
+  opacity: 0.6;
+}
+
+.salarie-erreur-photo {
+  font-size: 13px;
+  color: var(--couleur-danger);
+  font-weight: 600;
+}

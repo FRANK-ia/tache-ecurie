@@ -13,11 +13,15 @@ import {
   insertObservation,
   fetchObservationsNonLues,
   marquerObservationLue,
+  uploaderPhotoObservation,
 } from '../../lib/api'
 import { buildDailyTaskList, toDateKey, getSaison, estJourNonTravaille } from '../../lib/calendarLogic'
+import { comprimerImage } from '../../lib/image'
 import { HORAIRE_SOIR } from '../../lib/constants'
 import { T, formatTexte } from '../../lib/textes'
 import TaskList from '../TaskList/TaskList'
+import PhotoPicker from '../PhotoPicker/PhotoPicker'
+import PhotoAffichee from '../PhotoAffichee/PhotoAffichee'
 import './SalarieView.css'
 
 export default function SalarieView({ employe, onDeconnexion }) {
@@ -28,6 +32,9 @@ export default function SalarieView({ employe, onDeconnexion }) {
   const [enCours, setEnCours] = useState(false)
   const [observation, setObservation] = useState('')
   const [observationEnvoyee, setObservationEnvoyee] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const [envoiPhotoEnCours, setEnvoiPhotoEnCours] = useState(false)
+  const [erreurPhoto, setErreurPhoto] = useState('')
   const [commentaires, setCommentaires] = useState([])
 
   const aujourdhui = useMemo(() => new Date(), [])
@@ -130,9 +137,28 @@ export default function SalarieView({ employe, onDeconnexion }) {
     e.preventDefault()
     if (!observation.trim()) return
     setEnCours(true)
+    setErreurPhoto('')
+
+    // Dégradation gracieuse (§ terrain) : un échec d'upload photo ne doit jamais
+    // empêcher le texte de partir. On tente la photo AVANT l'insert, et l'insert a
+    // toujours lieu ensuite, avec le chemin si l'upload a réussi, sans sinon.
+    let imagePath = null
+    if (photo) {
+      setEnvoiPhotoEnCours(true)
+      try {
+        const compressee = await comprimerImage(photo)
+        imagePath = await uploaderPhotoObservation(compressee)
+      } catch {
+        setErreurPhoto(T.commun.erreurPhoto)
+      } finally {
+        setEnvoiPhotoEnCours(false)
+      }
+    }
+
     try {
-      await insertObservation({ employeId: employe.id, texte: observation.trim(), jour: jourKey })
+      await insertObservation({ employeId: employe.id, texte: observation.trim(), jour: jourKey, imagePath })
       setObservation('')
+      setPhoto(null)
       setObservationEnvoyee(true)
       setTimeout(() => setObservationEnvoyee(false), 3000)
     } catch (e) {
@@ -175,6 +201,7 @@ export default function SalarieView({ employe, onDeconnexion }) {
               <li key={c.id} className="salarie-commentaire">
                 <p className="salarie-commentaire-texte">{c.texte}</p>
                 <p className="salarie-commentaire-meta">{new Date(c.cree_le).toLocaleString('fr-FR')}</p>
+                <PhotoAffichee cheminImage={c.image_path} />
                 <button
                   type="button"
                   className="salarie-commentaire-lu"
@@ -209,8 +236,14 @@ export default function SalarieView({ employe, onDeconnexion }) {
               placeholder={T.salarie.observationPlaceholder}
               rows={3}
             />
+            <PhotoPicker value={photo} onChange={setPhoto} disabled={enCours} />
+            {erreurPhoto && <p className="salarie-erreur-photo">{erreurPhoto}</p>}
             <button type="submit" className="salarie-observations-bouton" disabled={enCours || !observation.trim()}>
-              {observationEnvoyee ? T.salarie.observationEnvoyee : T.salarie.observationBouton}
+              {envoiPhotoEnCours
+                ? T.commun.envoiPhotoEnCours
+                : observationEnvoyee
+                  ? T.salarie.observationEnvoyee
+                  : T.salarie.observationBouton}
             </button>
           </form>
         </>

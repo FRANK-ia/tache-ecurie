@@ -1,0 +1,50 @@
+.photo-picker-bouton {
+  align-self: flex-start;
+  min-height: var(--hauteur-tap-min);
+  padding: 0 16px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  background: #fff;
+  color: var(--couleur-texte-attenue);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.photo-picker-bouton:disabled {
+  opacity: 0.6;
+}
+
+.photo-picker-apercu {
+  position: relative;
+  align-self: flex-start;
+  width: 96px;
+  height: 96px;
+}
+
+.photo-picker-apercu img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--rayon);
+  border: 1px solid var(--couleur-bordure);
+}
+
+.photo-picker-retirer {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--couleur-danger);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+
+.photo-picker-retirer:disabled {
+  opacity: 0.6;
+}

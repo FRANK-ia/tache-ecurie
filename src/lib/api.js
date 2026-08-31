@@ -234,10 +234,16 @@ export async function desactiverCondition(jour, condition) {
 
 // ---- Observations (bidirectionnelles : salarie_vers_employeur / employeur_vers_salarie) ----
 
-export async function insertObservation({ employeId, texte, jour, direction = 'salarie_vers_employeur' }) {
+export async function insertObservation({
+  employeId,
+  texte,
+  jour,
+  direction = 'salarie_vers_employeur',
+  imagePath = null,
+}) {
   const res = await supabase
     .from('observations')
-    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, jour, lu: false, direction })
+    .insert({ centre_id: CENTRE_ID, employe_id: employeId, texte, jour, lu: false, direction, image_path: imagePath })
     .select()
     .single()
   return unwrap(res)
@@ -332,4 +338,30 @@ export async function insertReposException({ jour, type }) {
 export async function supprimerReposException(id) {
   const res = await supabase.from('repos_exceptions').delete().eq('id', id)
   return unwrap(res)
+}
+
+// ---- Photo optionnelle jointe à un commentaire (bucket privé 'commentaires-photos') ----
+// La purge physique (le lendemain de la lecture) est un workflow n8n séparé, pas géré ici.
+
+const BUCKET_PHOTOS_COMMENTAIRES = 'commentaires-photos'
+
+/**
+ * Upload une photo DÉJÀ compressée (voir src/lib/image.js) dans le bucket privé.
+ * Renvoie le CHEMIN stocké dans `observations.image_path` — jamais une URL : le
+ * bucket est privé, l'affichage passe systématiquement par une URL signée
+ * temporaire (fetchUrlSigneePhotoObservation), jamais par une URL publique.
+ */
+export async function uploaderPhotoObservation(blobCompresse) {
+  const chemin = `${CENTRE_ID}/${crypto.randomUUID()}.jpg`
+  const res = await supabase.storage
+    .from(BUCKET_PHOTOS_COMMENTAIRES)
+    .upload(chemin, blobCompresse, { contentType: 'image/jpeg' })
+  unwrap(res)
+  return chemin
+}
+
+/** URL signée temporaire (expire par défaut après 1h) pour afficher une photo. */
+export async function fetchUrlSigneePhotoObservation(chemin, expirationSecondes = 3600) {
+  const res = await supabase.storage.from(BUCKET_PHOTOS_COMMENTAIRES).createSignedUrl(chemin, expirationSecondes)
+  return unwrap(res).signedUrl
 }

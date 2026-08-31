@@ -1,0 +1,36 @@
+.photo-affichee-vignette {
+  display: block;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  overflow: hidden;
+  background: none;
+  margin-top: 8px;
+}
+
+.photo-affichee-vignette img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-affichee-plein-ecran {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.photo-affichee-plein-ecran img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--rayon);
+  object-fit: contain;
+}

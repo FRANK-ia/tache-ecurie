@@ -198,3 +198,9 @@
 .employeur-commentaire-bouton:disabled {
   opacity: 0.6;
 }
+
+.employeur-erreur-photo {
+  font-size: 13px;
+  color: var(--couleur-danger);
+  font-weight: 600;
+}

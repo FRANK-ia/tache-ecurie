@@ -13,6 +13,7 @@ import {
 import { buildDailyTaskList, toDateKey, typeJourNonTravaille } from '../../lib/calendarLogic'
 import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
 import { T } from '../../lib/textes'
+import PhotoAffichee from '../PhotoAffichee/PhotoAffichee'
 import './Historique.css'
 
 export default function Historique() {
@@ -155,6 +156,7 @@ export default function Historique() {
                     </span>
                     <br />
                     {obs.texte}
+                    <PhotoAffichee cheminImage={obs.image_path} />
                   </li>
                 ))}
               </ul>

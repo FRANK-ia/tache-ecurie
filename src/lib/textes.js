@@ -47,6 +47,11 @@ export const T = {
     // Partagé par les deux sens de commentaires (salarié→Laetitia et Laetitia→salarié) :
     // même bouton, même effet (passe en lu, quitte la vue active).
     marquerLu: 'Marquer comme lu',
+    // Photo optionnelle jointe à un commentaire — partagé par les deux sens.
+    ajouterPhoto: '📷 Ajouter une photo',
+    retirerPhoto: '✕ Retirer la photo',
+    envoiPhotoEnCours: 'Envoi de la photo…',
+    erreurPhoto: 'Photo non envoyée, réessaie.',
   },
 
   // ---- Labels par clé technique (période, condition, rôle, jour, famille) ----
