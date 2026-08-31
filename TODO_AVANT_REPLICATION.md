@@ -44,6 +44,44 @@ Actuellement `CENTRE_ID` est une constante en dur dans `src/supabaseClient.js`.
 - Adapter tous les appels dans `src/lib/api.js` pour utiliser le centre courant au lieu de
   la constante fixe.
 
+## 4. Logique de récurrence dupliquée (calendarLogic.js + fonction SQL taches_oubliees)
+
+La fonction SQL `taches_oubliees` (voir `sql/migrations.sql` migration 5, et
+`sql/taches_oubliees_tests.sql`) réimplémente en PL/pgSQL la même règle métier que
+`src/lib/calendarLogic.js`, pour que le workflow n8n d'alerte "tâches non faites"
+s'appuie sur la même logique que l'app (celle-ci reste en JS, rien n'a changé côté
+React).
+
+Règle de sûreté : **aucune valeur métier en dur des deux côtés** — tout paramètre
+(`intervalle_jours`, `jours_semaine`, `jour_semaine`, `jours_mois`, `condition`,
+`centres.jours_repos`...) vit en base et est lu par les deux implémentations ; seule la
+STRUCTURE d'une règle (le "comment interpréter `intervalle_jours`") est en dur, identique
+des deux côtés par construction. Tant que cette règle tient, les modifications de Frank
+via l'écran Réglages — qui passent toutes par des données, jamais par du code — ne
+peuvent pas créer d'écart entre JS et SQL.
+
+**Une modification de la STRUCTURE d'une règle** (pas d'une valeur) doit être répercutée
+manuellement aux deux endroits. Une requête de contrôle de cohérence est disponible
+(`taches_attendues_jour` dans `sql/migrations.sql`, usage documenté dans
+`sql/taches_oubliees_tests.sql`) : à relancer ponctuellement, surtout après une modif de
+structure, pour confronter visuellement le résultat SQL à l'écran salarié.
+
+Niveau 2 à envisager pour le multi-centres : une source unique de la règle métier
+(probablement le SQL, consommé par l'app via RPC) plutôt que deux implémentations
+maintenues en parallèle.
+
+## 5. Contrainte `task_templates_recurrence_check` désynchronisée du code
+
+Constaté en écrivant la fonction `taches_oubliees` (point 4) : la migration 2 de
+`sql/migrations.sql` (ajout de `'premier_vendredi'` à la liste des valeurs autorisées pour
+`recurrence`) n'a jamais été exécutée sur la base réelle. Résultat : impossible de créer
+une tâche avec `recurrence='premier_vendredi'` (rejetée par la contrainte), alors que le
+JS (`calendarLogic.js`) et l'écran Réglages (`GestionTaches.jsx`) supportent déjà ce type
+de récurrence. L'option "Premier vendredi du mois" est donc actuellement invisible côté
+usage réel (aucune tâche de ce type n'existe en base) mais inutilisable si on essaie de
+s'en servir. À corriger en exécutant la migration 2 quand ce type de récurrence doit
+devenir utilisable.
+
 ## Angle mort V2 déjà identifié (hors sécurité)
 
 Le rouleau "3×/semaine décalable selon météo" (§4.2b, §6.4) n'est en V1 qu'un réglage
