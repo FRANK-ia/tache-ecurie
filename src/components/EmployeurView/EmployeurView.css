@@ -204,3 +204,66 @@
   color: var(--couleur-danger);
   font-weight: 600;
 }
+
+.employeur-intro {
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+  margin-top: -6px;
+  margin-bottom: 10px;
+}
+
+.employeur-plage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.employeur-plage-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--couleur-texte-attenue);
+}
+
+.employeur-plage-champ input {
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 0 10px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--couleur-texte);
+}
+
+.employeur-plage-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.employeur-plage-activer {
+  flex: 1;
+  min-height: var(--hauteur-tap-min);
+  border: none;
+  border-radius: var(--rayon);
+  background: var(--couleur-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.employeur-plage-desactiver {
+  flex: 1;
+  min-height: var(--hauteur-tap-min);
+  border: 1px solid var(--couleur-danger);
+  border-radius: var(--rayon);
+  background: #fff;
+  color: var(--couleur-danger);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.employeur-plage-activer:disabled,
+.employeur-plage-desactiver:disabled {
+  opacity: 0.6;
+}

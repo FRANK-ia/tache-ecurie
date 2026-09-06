@@ -9,9 +9,10 @@ import {
   fetchJoursRepos,
   fetchConges,
   fetchReposExceptions,
+  estJourExterieur,
 } from '../../lib/api'
-import { buildDailyTaskList, toDateKey, typeJourNonTravaille } from '../../lib/calendarLogic'
-import { PERIODES, PERIODE_COULEURS } from '../../lib/constants'
+import { buildDailyTaskList, toDateKey, typeJourNonTravaille, formatHeureCourte } from '../../lib/calendarLogic'
+import { PERIODES, PERIODE_COULEURS, COULEUR_MAISON } from '../../lib/constants'
 import { T } from '../../lib/textes'
 import PhotoAffichee from '../PhotoAffichee/PhotoAffichee'
 import './Historique.css'
@@ -37,17 +38,27 @@ export default function Historique() {
         const estAujourdhui = dateChoisie === toDateKey(new Date())
         const templates = estAujourdhui ? toutesTemplates.filter((t) => t.actif) : toutesTemplates
         const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
-        const [ponctuelles, completions, conditions, dernieresCompletions, obs, joursRepos, conges, exceptions] =
-          await Promise.all([
-            fetchPonctuellesDuJour(dateChoisie),
-            fetchCompletionsDuJour(dateChoisie),
-            fetchConditionsDuJour(dateChoisie),
-            fetchDernieresCompletionsIntervalleAvant(templatesIntervalle.map((t) => t.id), dateChoisie),
-            fetchObservationsPourDate(dateChoisie),
-            fetchJoursRepos(),
-            fetchConges(),
-            fetchReposExceptions(),
-          ])
+        const [
+          ponctuelles,
+          completions,
+          conditions,
+          dernieresCompletions,
+          obs,
+          joursRepos,
+          conges,
+          exceptions,
+          exterieur,
+        ] = await Promise.all([
+          fetchPonctuellesDuJour(dateChoisie),
+          fetchCompletionsDuJour(dateChoisie),
+          fetchConditionsDuJour(dateChoisie),
+          fetchDernieresCompletionsIntervalleAvant(templatesIntervalle.map((t) => t.id), dateChoisie),
+          fetchObservationsPourDate(dateChoisie),
+          fetchJoursRepos(),
+          fetchConges(),
+          fetchReposExceptions(),
+          estJourExterieur(dateChoisie),
+        ])
         if (annule) return
         const [annee, mois, jour] = dateChoisie.split('-').map(Number)
         const dateObj = new Date(annee, mois - 1, jour)
@@ -66,6 +77,7 @@ export default function Historique() {
               date: dateObj,
               activeConditions: conditions,
               lastCompletionByTemplateId: dernieresCompletions,
+              jourExterieur: exterieur,
             })
         setTaches(liste)
         setObservations(obs)
@@ -126,12 +138,26 @@ export default function Historique() {
                 </h3>
                 <ul className="historique-liste">
                   {groupe.taches.map((t) => (
-                    <li key={`${t.kind}-${t.id}`} className={t.fait ? 'faite' : 'non-faite'}>
+                    <li
+                      key={`${t.kind}-${t.id}`}
+                      className={t.fait ? 'faite' : 'non-faite'}
+                      style={
+                        t.categorie === 'maison'
+                          ? {
+                              '--couleur-periode-fond': COULEUR_MAISON.fond,
+                              '--couleur-periode-bordure': COULEUR_MAISON.lisere,
+                            }
+                          : undefined
+                      }
+                    >
                       <span className="historique-marque">{t.fait ? '✓' : '✗'}</span>{' '}
                       {T.conditionEmojis[t.condition] && (
                         <span aria-hidden="true">{T.conditionEmojis[t.condition]} </span>
                       )}
                       {t.libelle}
+                      {formatHeureCourte(t.heureAffichee) && (
+                        <span className="historique-heure">· {formatHeureCourte(t.heureAffichee)}</span>
+                      )}
                       {t.kind === 'ponctuelle' && <span className="historique-badge">{T.badges.ajout}</span>}
                     </li>
                   ))}

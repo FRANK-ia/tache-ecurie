@@ -40,6 +40,13 @@
   color: var(--couleur-periode-texte, var(--couleur-texte));
 }
 
+.task-item-heure {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
 .task-item-fait .task-item-libelle {
   text-decoration: line-through;
   color: var(--couleur-texte-attenue);

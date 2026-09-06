@@ -13,6 +13,8 @@ import {
   statutFraicheur,
   estJourNonTravaille,
   typeJourNonTravaille,
+  joursDansPlage,
+  formatHeureCourte,
 } from './calendarLogic'
 
 describe('isoDayOfWeek', () => {
@@ -312,6 +314,107 @@ describe('isTaskDone / buildDailyTaskList', () => {
 
     const libellesMatin = result.filter((t) => t.periode === 'matin').map((t) => t.libelle)
     expect(libellesMatin).toEqual(sequenceMatin)
+  })
+
+  it('trie une période par heure croissante (tâches avec heure), puis par ordre pour celles sans (§ mécanisme 1)', () => {
+    const templates = [
+      { id: 'sans-1', recurrence: 'quotidienne', libelle: 'Sans heure A', periode: 'matin', ordre: 1 },
+      { id: 'avec-20h30', recurrence: 'conditionnelle', condition: 'gardiennage', libelle: 'Dernière du soir', periode: 'matin', heure: '20:30:00', ordre: 99 },
+      { id: 'sans-2', recurrence: 'quotidienne', libelle: 'Sans heure B', periode: 'matin', ordre: 2 },
+      { id: 'avec-7h30', recurrence: 'conditionnelle', condition: 'gardiennage', libelle: 'Nourrir chiens', periode: 'matin', heure: '07:30:00', ordre: 50 },
+    ]
+    const result = buildDailyTaskList({
+      templates,
+      date: new Date(),
+      activeConditions: ['gardiennage'],
+    })
+    expect(result.map((t) => t.libelle)).toEqual([
+      'Nourrir chiens', // heure la plus tôt
+      'Dernière du soir', // heure la plus tardive
+      'Sans heure A', // pas d'heure -> ordre
+      'Sans heure B',
+    ])
+  })
+
+  it("une tâche écurie sans `heure` n'affiche rien (heureAffichee null) — pas de régression", () => {
+    const templates = [{ id: 't1', recurrence: 'quotidienne', libelle: 'Nourrir', periode: 'matin', ordre: 1 }]
+    const result = buildDailyTaskList({ templates, date: new Date() })
+    expect(result[0].heureAffichee).toBe(null)
+    expect(result[0].categorie).toBe('ecurie')
+  })
+
+  it('jour extérieur : heure_exterieur remplace heure si renseignée (§ mécanisme 2)', () => {
+    const templates = [
+      {
+        id: 't1',
+        recurrence: 'conditionnelle',
+        condition: 'gardiennage',
+        categorie: 'maison',
+        libelle: 'Nourrir chiens',
+        periode: 'matin',
+        heure: '07:30:00',
+        heure_exterieur: '05:30:00',
+        ordre: 1,
+      },
+    ]
+    const normal = buildDailyTaskList({ templates, date: new Date(), activeConditions: ['gardiennage'] })
+    expect(normal[0].heureAffichee).toBe('07:30:00')
+
+    const exterieur = buildDailyTaskList({
+      templates,
+      date: new Date(),
+      activeConditions: ['gardiennage'],
+      jourExterieur: true,
+    })
+    expect(exterieur[0].heureAffichee).toBe('05:30:00')
+    expect(exterieur[0].categorie).toBe('maison')
+  })
+
+  it("jour extérieur mais heure_exterieur absente -> reste sur `heure`", () => {
+    const templates = [
+      { id: 't1', recurrence: 'quotidienne', libelle: 'Nourrir', periode: 'matin', heure: '08:00:00', ordre: 1 },
+    ]
+    const result = buildDailyTaskList({ templates, date: new Date(), jourExterieur: true })
+    expect(result[0].heureAffichee).toBe('08:00:00')
+  })
+})
+
+describe('formatHeureCourte', () => {
+  it('minutes rondes -> "7h"', () => {
+    expect(formatHeureCourte('07:00:00')).toBe('7h')
+  })
+  it('minutes non rondes -> "7h30"', () => {
+    expect(formatHeureCourte('07:30:00')).toBe('7h30')
+  })
+  it('heure sur 2 chiffres sans zéro superflu -> "18h"', () => {
+    expect(formatHeureCourte('18:00:00')).toBe('18h')
+  })
+  it('null/undefined -> null (pas d\'affichage)', () => {
+    expect(formatHeureCourte(null)).toBe(null)
+    expect(formatHeureCourte(undefined)).toBe(null)
+  })
+})
+
+describe('joursDansPlage', () => {
+  it('liste tous les jours inclus, bornes comprises', () => {
+    expect(joursDansPlage('2026-09-01', '2026-09-05')).toEqual([
+      '2026-09-01',
+      '2026-09-02',
+      '2026-09-03',
+      '2026-09-04',
+      '2026-09-05',
+    ])
+  })
+  it('une seule date si début = fin', () => {
+    expect(joursDansPlage('2026-09-01', '2026-09-01')).toEqual(['2026-09-01'])
+  })
+  it('traverse un changement de mois sans erreur', () => {
+    expect(joursDansPlage('2026-08-30', '2026-09-02')).toEqual([
+      '2026-08-30',
+      '2026-08-31',
+      '2026-09-01',
+      '2026-09-02',
+    ])
   })
 })
 

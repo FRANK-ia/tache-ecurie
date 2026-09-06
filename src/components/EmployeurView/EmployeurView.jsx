@@ -10,6 +10,8 @@ import {
   fetchReposExceptions,
   activerCondition,
   desactiverCondition,
+  activerConditionPlage,
+  desactiverConditionPlage,
   insertPonctuelle,
   fetchObservationsNonLues,
   marquerObservationLue,
@@ -42,6 +44,10 @@ export default function EmployeurView({ employe, onDeconnexion }) {
   const [photoCommentaire, setPhotoCommentaire] = useState(null)
   const [envoiPhotoEnCours, setEnvoiPhotoEnCours] = useState(false)
   const [erreurPhoto, setErreurPhoto] = useState('')
+  const [plageGardiennage, setPlageGardiennage] = useState({ dateDebut: '', dateFin: '' })
+  const [plageEnCours, setPlageEnCours] = useState(false)
+  const [plageErreur, setPlageErreur] = useState('')
+  const [plageAppliquee, setPlageAppliquee] = useState(false)
 
   const aujourdhui = useMemo(() => new Date(), [])
   const jourKey = toDateKey(aujourdhui)
@@ -107,6 +113,53 @@ export default function EmployeurView({ employe, onDeconnexion }) {
       setErreur(e.message)
     } finally {
       setEnCours(false)
+    }
+  }
+
+  async function activerPlage(e) {
+    e.preventDefault()
+    setPlageErreur('')
+    if (!plageGardiennage.dateDebut || !plageGardiennage.dateFin) {
+      setPlageErreur(T.employeur.erreurPlageDatesManquantes)
+      return
+    }
+    if (plageGardiennage.dateFin < plageGardiennage.dateDebut) {
+      setPlageErreur(T.employeur.erreurPlageDatesInvalides)
+      return
+    }
+    setPlageEnCours(true)
+    try {
+      await activerConditionPlage(plageGardiennage.dateDebut, plageGardiennage.dateFin, 'gardiennage')
+      setPlageAppliquee(true)
+      setTimeout(() => setPlageAppliquee(false), 3000)
+      await charger()
+    } catch (e) {
+      setPlageErreur(e.message)
+    } finally {
+      setPlageEnCours(false)
+    }
+  }
+
+  async function desactiverPlage() {
+    setPlageErreur('')
+    if (!plageGardiennage.dateDebut || !plageGardiennage.dateFin) {
+      setPlageErreur(T.employeur.erreurPlageDatesManquantes)
+      return
+    }
+    if (plageGardiennage.dateFin < plageGardiennage.dateDebut) {
+      setPlageErreur(T.employeur.erreurPlageDatesInvalides)
+      return
+    }
+    const confirme = window.confirm(T.employeur.confirmDesactivationPlage)
+    if (!confirme) return
+    setPlageEnCours(true)
+    try {
+      await desactiverConditionPlage(plageGardiennage.dateDebut, plageGardiennage.dateFin, 'gardiennage')
+      await charger()
+    } catch (e) {
+      setPlageErreur(e.message)
+    } finally {
+      setPlageEnCours(false)
     }
   }
 
@@ -234,6 +287,43 @@ export default function EmployeurView({ employe, onDeconnexion }) {
                   </button>
                 ))}
               </div>
+            </section>
+
+            <section className="employeur-section">
+              <h2 className="employeur-section-titre">{T.employeur.gardiennagePlageTitre}</h2>
+              <p className="employeur-intro">{T.employeur.gardiennagePlageIntro}</p>
+              <form className="employeur-plage-form" onSubmit={activerPlage}>
+                <label className="employeur-plage-champ">
+                  {T.repos.champDu}
+                  <input
+                    type="date"
+                    value={plageGardiennage.dateDebut}
+                    onChange={(e) => setPlageGardiennage((p) => ({ ...p, dateDebut: e.target.value }))}
+                  />
+                </label>
+                <label className="employeur-plage-champ">
+                  {T.repos.champAu}
+                  <input
+                    type="date"
+                    value={plageGardiennage.dateFin}
+                    onChange={(e) => setPlageGardiennage((p) => ({ ...p, dateFin: e.target.value }))}
+                  />
+                </label>
+                {plageErreur && <p className="employeur-erreur">{plageErreur}</p>}
+                <div className="employeur-plage-actions">
+                  <button type="submit" className="employeur-plage-activer" disabled={plageEnCours}>
+                    {plageAppliquee ? T.employeur.plageAppliquee : T.employeur.activerPlageBouton}
+                  </button>
+                  <button
+                    type="button"
+                    className="employeur-plage-desactiver"
+                    onClick={desactiverPlage}
+                    disabled={plageEnCours}
+                  >
+                    {T.employeur.desactiverPlageBouton}
+                  </button>
+                </div>
+              </form>
             </section>
 
             <section className="employeur-section">

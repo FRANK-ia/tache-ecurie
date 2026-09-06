@@ -155,6 +155,15 @@ export const T = {
     observationsVide: 'Aucune observation non lue.',
     commentaireTitre: 'Commentaire pour le salarié',
     commentairePlaceholder: 'Une consigne, un rappel…',
+    gardiennagePlageTitre: 'Gardiennage sur plusieurs jours',
+    gardiennagePlageIntro:
+      'Active ou retire le gardiennage sur une période complète, sans repasser jour par jour.',
+    activerPlageBouton: 'Activer sur cette période',
+    desactiverPlageBouton: 'Désactiver sur cette période',
+    confirmDesactivationPlage: 'Retirer le gardiennage sur cette période ?',
+    erreurPlageDatesManquantes: 'Indique une date de début et une date de fin.',
+    erreurPlageDatesInvalides: 'La date de fin doit être après la date de début.',
+    plageAppliquee: 'Fait ✓',
   },
 
   // ---- Historique ----
@@ -254,6 +263,26 @@ export const T = {
     exceptionsAVenirTitre: 'Exceptions à venir',
     exceptionsVide: 'Aucune exception prévue.',
     confirmRetraitException: 'Retirer cette exception ? Le jour reprendra la règle habituelle.',
+  },
+
+  // ---- Jours "extérieur" (horaires alternatifs des tâches concernées) ----
+  exterieur: {
+    hebdoTitre: 'Jours extérieur',
+    hebdoIntro:
+      "Jour(s) où le travail se fait à l'extérieur, chaque semaine — change l'horaire affiché " +
+      'des tâches concernées (pas leur contenu).',
+    exceptionAjoutTitre: 'Exception ponctuelle',
+    exceptionIntro:
+      'Force un jour précis en extérieur ou intérieur, sans toucher à la règle hebdomadaire.',
+    champDate: 'Date',
+    champType: 'Ce jour-là',
+    optionExterieur: 'Extérieur',
+    optionInterieur: 'Intérieur',
+    erreurDateManquante: 'Indique une date.',
+    exceptionsAVenirTitre: 'Exceptions à venir',
+    exceptionsVide: 'Aucune exception prévue.',
+    confirmRetraitException: 'Retirer cette exception ? Le jour reprendra la règle habituelle.',
+    retirerBouton: 'Retirer',
   },
 
   // ---- Sens des commentaires (Historique) ----

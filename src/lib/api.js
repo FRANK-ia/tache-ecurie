@@ -3,6 +3,7 @@
 
 import { supabase, CENTRE_ID } from '../supabaseClient'
 import { PERIODES } from './constants'
+import { joursDansPlage } from './calendarLogic'
 
 function unwrap({ data, error }) {
   if (error) throw new Error(error.message)
@@ -232,6 +233,35 @@ export async function desactiverCondition(jour, condition) {
   return unwrap(res)
 }
 
+/**
+ * Active une condition sur une PLAGE de jours (§ gardiennage sur plusieurs jours) :
+ * un upsert par jour de la plage, sur la contrainte unique (centre_id, jour,
+ * condition) — ne plante jamais si un jour de la plage est déjà actif, contrairement
+ * à un simple insert.
+ */
+export async function activerConditionPlage(dateDebut, dateFin, condition) {
+  const lignes = joursDansPlage(dateDebut, dateFin).map((jour) => ({
+    centre_id: CENTRE_ID,
+    jour,
+    condition,
+    source: 'manuel',
+  }))
+  const res = await supabase.from('conditions_jour').upsert(lignes, { onConflict: 'centre_id,jour,condition' })
+  return unwrap(res)
+}
+
+/** Retire une condition sur une plage de jours (inverse d'activerConditionPlage). */
+export async function desactiverConditionPlage(dateDebut, dateFin, condition) {
+  const res = await supabase
+    .from('conditions_jour')
+    .delete()
+    .eq('centre_id', CENTRE_ID)
+    .eq('condition', condition)
+    .gte('jour', dateDebut)
+    .lte('jour', dateFin)
+  return unwrap(res)
+}
+
 // ---- Observations (bidirectionnelles : salarie_vers_employeur / employeur_vers_salarie) ----
 
 export async function insertObservation({
@@ -364,4 +394,50 @@ export async function uploaderPhotoObservation(blobCompresse) {
 export async function fetchUrlSigneePhotoObservation(chemin, expirationSecondes = 3600) {
   const res = await supabase.storage.from(BUCKET_PHOTOS_COMMENTAIRES).createSignedUrl(chemin, expirationSecondes)
   return unwrap(res).signedUrl
+}
+
+// ---- Jour "extérieur" (horaires alternatifs des tâches, § mécanisme 2) ----
+
+/**
+ * Vrai si `jour` est un jour "extérieur" pour le centre. Appelle la fonction SQL
+ * `est_jour_exterieur` (repos hebdo + exceptions déjà tranchés côté base) — ne PAS
+ * réimplémenter cette logique côté JS, contrairement à estJourNonTravaille qui, elle,
+ * est dupliquée par nécessité (voir TODO_AVANT_REPLICATION.md).
+ */
+export async function estJourExterieur(jour) {
+  const res = await supabase.rpc('est_jour_exterieur', { p_centre: CENTRE_ID, p_jour: jour })
+  return unwrap(res)
+}
+
+/** Jours extérieur hebdo récurrents (tableau ISO, 1=lundi..7=dimanche). */
+export async function fetchJoursExterieur() {
+  const res = await supabase.from('centres').select('jours_exterieur').eq('id', CENTRE_ID).single()
+  return unwrap(res).jours_exterieur ?? []
+}
+
+export async function updateJoursExterieur(joursExterieur) {
+  const res = await supabase.from('centres').update({ jours_exterieur: joursExterieur }).eq('id', CENTRE_ID)
+  return unwrap(res)
+}
+
+/** Toutes les exceptions extérieur/intérieur du centre. */
+export async function fetchExterieurExceptions() {
+  const res = await supabase.from('exterieur_exceptions').select('*').eq('centre_id', CENTRE_ID).order('jour')
+  return unwrap(res)
+}
+
+export async function insertExterieurException({ jour, type }) {
+  const res = await supabase
+    .from('exterieur_exceptions')
+    .insert({ centre_id: CENTRE_ID, jour, type })
+    .select()
+    .single()
+  return unwrap(res)
+}
+
+/** DELETE autorisé, comme repos_exceptions/jours_conges : réglage ponctuel, pas une
+ * donnée d'historique métier. */
+export async function supprimerExterieurException(id) {
+  const res = await supabase.from('exterieur_exceptions').delete().eq('id', id)
+  return unwrap(res)
 }

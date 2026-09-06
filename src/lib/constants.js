@@ -78,6 +78,13 @@ export function couleurTache(periode, recurrence) {
   return COULEURS_TACHE[periode]?.[niveau]
 }
 
+// Tâches categorie='maison' (§ gardiennage chiens/lapins) : orange vif qui PRIME sur
+// la couleur de période habituelle, quelle que soit la période — c'est la catégorie,
+// pas la période, qui pilote leur couleur. Contraste vérifié : texte/fond 7.0:1
+// (largement AA), badges existants (Nouveau/Modifié/Ajout) restent lisibles par-dessus
+// grâce au double liseré déjà en place dans TaskItem.css.
+export const COULEUR_MAISON = { fond: '#FFB74D', lisere: '#E65100', texte: '#5C2600' }
+
 // Horaire du soir affiché (§6.2), selon la saison déterminée par getSaison()
 // (changement d'heure européen réel — voir calendarLogic.js).
 export const HORAIRE_SOIR = {

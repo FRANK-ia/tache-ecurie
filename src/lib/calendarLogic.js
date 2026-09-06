@@ -64,6 +64,32 @@ export function daysBetweenDateKeys(aKey, bKey) {
   return Math.round((b - a) / 86400000)
 }
 
+/** Toutes les clés 'YYYY-MM-DD' entre `dateDebutKey` et `dateFinKey` incluses, dans
+ * l'ordre (§ activation d'une condition sur une plage, GestionRepos-like). Construction
+ * en LOCAL (comme toDateKey), pas en UTC : daysBetweenDateKeys ci-dessus n'a besoin que
+ * d'un écart de jours (UTC y suffit), mais ici on doit retomber sur le bon jour civil à
+ * chaque itération, y compris autour d'un changement d'heure. */
+export function joursDansPlage(dateDebutKey, dateFinKey) {
+  const [y1, m1, d1] = dateDebutKey.split('-').map(Number)
+  const [y2, m2, d2] = dateFinKey.split('-').map(Number)
+  const fin = new Date(y2, m2 - 1, d2)
+  const jours = []
+  for (const courant = new Date(y1, m1 - 1, d1); courant <= fin; courant.setDate(courant.getDate() + 1)) {
+    jours.push(toDateKey(courant))
+  }
+  return jours
+}
+
+/** Formate une heure SQL 'HH:MM:SS' en affichage court français ("7h30", "18h").
+ * `null`/`undefined` -> null (pas d'affichage, comportement identique à avant l'ajout
+ * de l'heure indicative sur les tâches). */
+export function formatHeureCourte(heure) {
+  if (!heure) return null
+  const [h, m] = heure.split(':')
+  const heureNum = parseInt(h, 10)
+  return m === '00' ? `${heureNum}h` : `${heureNum}h${m}`
+}
+
 /** Dernier dimanche du mois `moisIndex` (0=janvier) de `annee`, à 00h00 locale. */
 function dernierDimancheDuMois(annee, moisIndex) {
   const dernierJour = new Date(annee, moisIndex + 1, 0)
@@ -167,8 +193,33 @@ export function isTaskDone(task, completions) {
 }
 
 /**
+ * Tri d'affichage au sein d'une période (§ heure indicative) : les tâches ayant une
+ * `heureAffichee` passent d'abord, triées par heure croissante ; celles sans heure
+ * suivent, triées par `ordre` comme avant l'ajout de l'heure (aucune régression pour
+ * les tâches qui n'en ont pas). Les comparaisons entre tâches de périodes DIFFÉRENTES
+ * n'ont pas besoin d'être significatives : buildDailyTaskList trie la liste entière une
+ * seule fois, mais chaque écran refiltre ensuite par période avant affichage — seul
+ * l'ordre relatif à l'intérieur d'une même période compte.
+ */
+function comparerAffichage(a, b) {
+  if (a.heureAffichee && b.heureAffichee) {
+    if (a.heureAffichee !== b.heureAffichee) return a.heureAffichee < b.heureAffichee ? -1 : 1
+    return a.ordre - b.ordre
+  }
+  if (a.heureAffichee) return -1
+  if (b.heureAffichee) return 1
+  return a.ordre - b.ordre
+}
+
+/**
  * Assemble templates attendus + tâches ponctuelles du jour en une liste unique,
- * enrichie de l'état "fait/pas fait", groupée par période puis triée par `ordre`.
+ * enrichie de l'état "fait/pas fait", groupée par période puis triée par heure (si
+ * renseignée) puis par `ordre`.
+ *
+ * @param {boolean} jourExterieur - résultat de la fonction SQL `est_jour_exterieur`
+ *   (§ mécanisme 2) : si vrai et que le template a `heure_exterieur`, c'est cette
+ *   heure-là qui est affichée à la place de `heure`. Ne réimplémente pas la logique
+ *   "jour extérieur" ici — la valeur est calculée côté SQL et transmise telle quelle.
  */
 export function buildDailyTaskList({
   templates,
@@ -177,6 +228,7 @@ export function buildDailyTaskList({
   date,
   activeConditions = [],
   lastCompletionByTemplateId = {},
+  jourExterieur = false,
 }) {
   const templatesAttendus = getTasksForDay(templates, date, activeConditions, lastCompletionByTemplateId).map(
     (t) => ({
@@ -188,6 +240,8 @@ export function buildDailyTaskList({
       condition: t.condition ?? null,
       recurrence: t.recurrence,
       fraicheur: statutFraicheur(t),
+      categorie: t.categorie ?? 'ecurie',
+      heureAffichee: (jourExterieur && t.heure_exterieur ? t.heure_exterieur : t.heure) ?? null,
     })
   )
 
@@ -199,9 +253,11 @@ export function buildDailyTaskList({
     ordre: Number.POSITIVE_INFINITY,
     condition: null,
     recurrence: null,
+    categorie: 'ecurie',
+    heureAffichee: null,
   }))
 
-  const toutes = [...templatesAttendus, ...ponctuellesDuJour].sort((a, b) => a.ordre - b.ordre)
+  const toutes = [...templatesAttendus, ...ponctuellesDuJour].sort(comparerAffichage)
 
   return toutes.map((task) => ({ ...task, fait: isTaskDone(task, completions) }))
 }

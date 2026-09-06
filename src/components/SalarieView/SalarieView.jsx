@@ -8,6 +8,7 @@ import {
   fetchJoursRepos,
   fetchConges,
   fetchReposExceptions,
+  estJourExterieur,
   cocherTache,
   decocherTache,
   insertObservation,
@@ -63,11 +64,12 @@ export default function SalarieView({ employe, onDeconnexion }) {
 
       const templates = await fetchTemplates()
       const templatesIntervalle = templates.filter((t) => t.recurrence === 'intervalle')
-      const [ponctuelles, completions, conditions, dernieresCompletions] = await Promise.all([
+      const [ponctuelles, completions, conditions, dernieresCompletions, exterieur] = await Promise.all([
         fetchPonctuellesDuJour(jourKey),
         fetchCompletionsDuJour(jourKey),
         fetchConditionsDuJour(jourKey),
         fetchDernieresCompletionsIntervalle(templatesIntervalle.map((t) => t.id)),
+        estJourExterieur(jourKey),
       ])
       const liste = buildDailyTaskList({
         templates,
@@ -76,6 +78,7 @@ export default function SalarieView({ employe, onDeconnexion }) {
         date: aujourdhui,
         activeConditions: conditions,
         lastCompletionByTemplateId: dernieresCompletions,
+        jourExterieur: exterieur,
       })
       setTaches(liste)
     } catch (e) {

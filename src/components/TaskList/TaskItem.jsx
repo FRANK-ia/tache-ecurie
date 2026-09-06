@@ -1,10 +1,14 @@
-import { BADGE_COULEURS, couleurTache } from '../../lib/constants'
+import { BADGE_COULEURS, COULEUR_MAISON, couleurTache } from '../../lib/constants'
+import { formatHeureCourte } from '../../lib/calendarLogic'
 import { T } from '../../lib/textes'
 import './TaskItem.css'
 
 export default function TaskItem({ task, onToggle, disabled }) {
   const emoji = T.conditionEmojis[task.condition]
-  const couleurs = couleurTache(task.periode, task.recurrence)
+  // Orange vif PRIME sur la couleur de période habituelle pour les tâches maison
+  // (§ mécanisme 3) — la catégorie l'emporte, quelle que soit la période/récurrence.
+  const couleurs = task.categorie === 'maison' ? COULEUR_MAISON : couleurTache(task.periode, task.recurrence)
+  const heure = formatHeureCourte(task.heureAffichee)
 
   return (
     <button
@@ -21,6 +25,7 @@ export default function TaskItem({ task, onToggle, disabled }) {
       <span className="task-item-libelle">
         {emoji && <span aria-hidden="true">{emoji} </span>}
         {task.libelle}
+        {heure && <span className="task-item-heure">· {heure}</span>}
       </span>
       {task.fraicheur && (
         <span className="task-item-badge-fraicheur" style={{ background: BADGE_COULEURS[task.fraicheur] }}>

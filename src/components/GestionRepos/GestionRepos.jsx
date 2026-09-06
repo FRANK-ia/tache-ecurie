@@ -8,6 +8,11 @@ import {
   fetchReposExceptions,
   insertReposException,
   supprimerReposException,
+  fetchJoursExterieur,
+  updateJoursExterieur,
+  fetchExterieurExceptions,
+  insertExterieurException,
+  supprimerExterieurException,
 } from '../../lib/api'
 import { toDateKey } from '../../lib/calendarLogic'
 import { T } from '../../lib/textes'
@@ -29,6 +34,13 @@ export default function GestionRepos() {
   const [ajoutExceptionEnCours, setAjoutExceptionEnCours] = useState(false)
   const [ajoutExceptionErreur, setAjoutExceptionErreur] = useState('')
 
+  const [joursExterieur, setJoursExterieur] = useState([])
+  const [enregistrementJourExterieur, setEnregistrementJourExterieur] = useState(false)
+  const [exceptionsExterieur, setExceptionsExterieur] = useState([])
+  const [nouvelleExceptionExterieur, setNouvelleExceptionExterieur] = useState({ date: '', type: 'exterieur' })
+  const [ajoutExceptionExterieurEnCours, setAjoutExceptionExterieurEnCours] = useState(false)
+  const [ajoutExceptionExterieurErreur, setAjoutExceptionExterieurErreur] = useState('')
+
   useEffect(() => {
     charger()
   }, [])
@@ -37,14 +49,18 @@ export default function GestionRepos() {
     setChargement(true)
     setErreur('')
     try {
-      const [repos, congesData, exceptionsData] = await Promise.all([
+      const [repos, congesData, exceptionsData, exterieur, exceptionsExterieurData] = await Promise.all([
         fetchJoursRepos(),
         fetchConges(),
         fetchReposExceptions(),
+        fetchJoursExterieur(),
+        fetchExterieurExceptions(),
       ])
       setJoursRepos(repos)
       setConges(congesData)
       setExceptions(exceptionsData)
+      setJoursExterieur(exterieur)
+      setExceptionsExterieur(exceptionsExterieurData)
     } catch (e) {
       setErreur(e.message)
     } finally {
@@ -141,11 +157,65 @@ export default function GestionRepos() {
     }
   }
 
+  async function toggleJourExterieur(jourIso) {
+    if (enregistrementJourExterieur) return
+    const avant = joursExterieur
+    const nouveaux = joursExterieur.includes(jourIso)
+      ? joursExterieur.filter((j) => j !== jourIso)
+      : [...joursExterieur, jourIso].sort()
+    setJoursExterieur(nouveaux)
+    setEnregistrementJourExterieur(true)
+    setErreur('')
+    try {
+      await updateJoursExterieur(nouveaux)
+    } catch (e) {
+      setErreur(e.message)
+      setJoursExterieur(avant)
+    } finally {
+      setEnregistrementJourExterieur(false)
+    }
+  }
+
+  async function ajouterExceptionExterieur(e) {
+    e.preventDefault()
+    setAjoutExceptionExterieurErreur('')
+    if (!nouvelleExceptionExterieur.date) {
+      setAjoutExceptionExterieurErreur(T.exterieur.erreurDateManquante)
+      return
+    }
+    setAjoutExceptionExterieurEnCours(true)
+    try {
+      const cree = await insertExterieurException({
+        jour: nouvelleExceptionExterieur.date,
+        type: nouvelleExceptionExterieur.type,
+      })
+      setExceptionsExterieur((prev) => [...prev, cree].sort((a, b) => (a.jour < b.jour ? -1 : 1)))
+      setNouvelleExceptionExterieur({ date: '', type: 'exterieur' })
+    } catch (e) {
+      setAjoutExceptionExterieurErreur(e.message)
+    } finally {
+      setAjoutExceptionExterieurEnCours(false)
+    }
+  }
+
+  async function retirerExceptionExterieur(exception) {
+    const confirme = window.confirm(T.exterieur.confirmRetraitException)
+    if (!confirme) return
+    setErreur('')
+    try {
+      await supprimerExterieurException(exception.id)
+      setExceptionsExterieur((prev) => prev.filter((e) => e.id !== exception.id))
+    } catch (e) {
+      setErreur(e.message)
+    }
+  }
+
   if (chargement) return <p className="repos-chargement">{T.commun.chargement}</p>
 
   const aujourdhuiKey = toDateKey(new Date())
   const congesAVenir = conges.filter((c) => c.date_fin >= aujourdhuiKey)
   const exceptionsAVenir = exceptions.filter((e) => e.jour >= aujourdhuiKey)
+  const exceptionsExterieurAVenir = exceptionsExterieur.filter((e) => e.jour >= aujourdhuiKey)
 
   return (
     <div className="gestion-repos">
@@ -273,6 +343,79 @@ export default function GestionRepos() {
                 {conge.motif && <p className="repos-conge-motif">{conge.motif}</p>}
                 <button type="button" className="repos-conge-retirer" onClick={() => retirerConge(conge)}>
                   {T.repos.retirerBouton}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="repos-section">
+        <h2 className="repos-section-titre">{T.exterieur.hebdoTitre}</h2>
+        <p className="repos-intro">{T.exterieur.hebdoIntro}</p>
+        <div className="repos-jours-cases">
+          {T.jours.abreviations.map((label, index) => {
+            const jourIso = index + 1
+            return (
+              <button
+                type="button"
+                key={jourIso}
+                className={`repos-jour-case ${joursExterieur.includes(jourIso) ? 'actif' : ''}`}
+                onClick={() => toggleJourExterieur(jourIso)}
+                disabled={enregistrementJourExterieur}
+                title={T.jours.noms[index]}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="repos-section">
+        <h2 className="repos-section-titre">{T.exterieur.exceptionAjoutTitre}</h2>
+        <p className="repos-intro">{T.exterieur.exceptionIntro}</p>
+        <form className="repos-conge-form" onSubmit={ajouterExceptionExterieur}>
+          <label className="repos-champ">
+            {T.exterieur.champDate}
+            <input
+              type="date"
+              value={nouvelleExceptionExterieur.date}
+              onChange={(e) => setNouvelleExceptionExterieur((p) => ({ ...p, date: e.target.value }))}
+            />
+          </label>
+          <label className="repos-champ">
+            {T.exterieur.champType}
+            <select
+              value={nouvelleExceptionExterieur.type}
+              onChange={(e) => setNouvelleExceptionExterieur((p) => ({ ...p, type: e.target.value }))}
+            >
+              <option value="exterieur">{T.exterieur.optionExterieur}</option>
+              <option value="interieur">{T.exterieur.optionInterieur}</option>
+            </select>
+          </label>
+          {ajoutExceptionExterieurErreur && <p className="repos-erreur">{ajoutExceptionExterieurErreur}</p>}
+          <button type="submit" className="repos-conge-bouton" disabled={ajoutExceptionExterieurEnCours}>
+            {T.commun.ajouter}
+          </button>
+        </form>
+
+        {exceptionsExterieurAVenir.length === 0 ? (
+          <p className="repos-vide">{T.exterieur.exceptionsVide}</p>
+        ) : (
+          <ul className="repos-conges-liste">
+            {exceptionsExterieurAVenir.map((exception) => (
+              <li key={exception.id} className="repos-conge-carte">
+                <p className="repos-conge-dates">
+                  {exception.jour} —{' '}
+                  {exception.type === 'exterieur' ? T.exterieur.optionExterieur : T.exterieur.optionInterieur}
+                </p>
+                <button
+                  type="button"
+                  className="repos-conge-retirer"
+                  onClick={() => retirerExceptionExterieur(exception)}
+                >
+                  {T.exterieur.retirerBouton}
                 </button>
               </li>
             ))}
