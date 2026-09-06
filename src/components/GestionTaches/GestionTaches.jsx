@@ -18,6 +18,16 @@ function autoResize(el) {
   el.style.height = `${el.scrollHeight}px`
 }
 
+// Format attendu par <input type="time"> et par la colonne Postgres `time` : "HH:MM".
+// Un <input type="time"> n'émet un onChange que sur une saisie complète et valide, mais
+// cette regex reste le garde-fou explicite demandé (défense en profondeur, au cas où).
+const HEURE_VALIDE = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/** Tronque une heure Postgres "HH:MM:SS" en "HH:MM" pour la valeur d'un <input type="time">. */
+function heureCourte(heure) {
+  return heure ? heure.slice(0, 5) : ''
+}
+
 const RECURRENCE_ICONS = {
   quotidienne: '📅',
   hebdo: '🗓️',
@@ -66,6 +76,9 @@ const RECURRENCE_VIDE = {
 const NOUVELLE_TACHE_VIDE = {
   libelle: '',
   periode: 'matin',
+  categorie: 'ecurie',
+  heure: '',
+  heureExterieur: '',
   ...RECURRENCE_VIDE,
 }
 
@@ -298,6 +311,18 @@ export default function GestionTaches() {
     appliquer(template, { libelle: valeur })
   }
 
+  /** Écriture immédiate de l'heure (même logique que `appliquer` pour période/jours) :
+   * vider l'heure vide aussi son heure_exterieur, qui n'a plus de sens sans elle. */
+  function changerHeure(template, heure) {
+    if (heure && !HEURE_VALIDE.test(heure)) return
+    appliquer(template, { heure: heure || null, heure_exterieur: heure ? template.heure_exterieur : null })
+  }
+
+  function changerHeureExterieur(template, heureExterieur) {
+    if (heureExterieur && !HEURE_VALIDE.test(heureExterieur)) return
+    appliquer(template, { heure_exterieur: heureExterieur || null })
+  }
+
   function demanderDesactivation(template) {
     const confirme = window.confirm(T.reglages.confirmDesactivation)
     if (confirme) appliquer(template, { actif: false })
@@ -340,6 +365,15 @@ export default function GestionTaches() {
     if (!libelle) return
     setAjoutErreur('')
 
+    if (nouvelleTache.heure && !HEURE_VALIDE.test(nouvelleTache.heure)) {
+      setAjoutErreur(T.reglages.erreurHeureInvalide)
+      return
+    }
+    if (nouvelleTache.heureExterieur && !HEURE_VALIDE.test(nouvelleTache.heureExterieur)) {
+      setAjoutErreur(T.reglages.erreurHeureInvalide)
+      return
+    }
+
     const resultat = construireChampsRecurrence(nouvelleTache)
     if (resultat.erreur) {
       setAjoutErreur(resultat.erreur)
@@ -356,6 +390,10 @@ export default function GestionTaches() {
       libelle,
       periode: nouvelleTache.periode,
       ordre: ordreMaxDeLaPeriode + 1,
+      categorie: nouvelleTache.categorie,
+      heure: nouvelleTache.heure || null,
+      // N'a de sens que si `heure` est renseignée (§ brief) : jamais stockée seule.
+      heure_exterieur: nouvelleTache.heure ? nouvelleTache.heureExterieur || null : null,
       ...resultat.champs,
     }
 
@@ -499,6 +537,44 @@ export default function GestionTaches() {
               </select>
             </label>
 
+            <label className="gestion-champ">
+              {T.reglages.champCategorie}
+              <select
+                value={nouvelleTache.categorie}
+                onChange={(e) => setNouvelleTache((prev) => ({ ...prev, categorie: e.target.value }))}
+              >
+                <option value="ecurie">{T.reglages.optionEcurie}</option>
+                <option value="maison">{T.reglages.optionMaison}</option>
+              </select>
+            </label>
+
+            <label className="gestion-champ">
+              {T.reglages.champHeure}
+              <input
+                type="time"
+                value={nouvelleTache.heure}
+                onChange={(e) =>
+                  setNouvelleTache((prev) => ({
+                    ...prev,
+                    heure: e.target.value,
+                    // Sans heure, une heure jour-extérieur n'a plus de sens (§ brief).
+                    heureExterieur: e.target.value ? prev.heureExterieur : '',
+                  }))
+                }
+              />
+            </label>
+
+            {nouvelleTache.heure && (
+              <label className="gestion-champ">
+                {T.reglages.champHeureExterieur}
+                <input
+                  type="time"
+                  value={nouvelleTache.heureExterieur}
+                  onChange={(e) => setNouvelleTache((prev) => ({ ...prev, heureExterieur: e.target.value }))}
+                />
+              </label>
+            )}
+
             <ChampsRecurrence
               valeur={nouvelleTache}
               onChange={(patch) => setNouvelleTache((prev) => ({ ...prev, ...patch }))}
@@ -623,6 +699,40 @@ export default function GestionTaches() {
                     ))}
                   </select>
                 </label>
+
+                <label className="gestion-champ">
+                  {T.reglages.champCategorie}
+                  <select
+                    value={template.categorie ?? 'ecurie'}
+                    onChange={(e) => appliquer(template, { categorie: e.target.value })}
+                    disabled={enCours}
+                  >
+                    <option value="ecurie">{T.reglages.optionEcurie}</option>
+                    <option value="maison">{T.reglages.optionMaison}</option>
+                  </select>
+                </label>
+
+                <label className="gestion-champ">
+                  {T.reglages.champHeure}
+                  <input
+                    type="time"
+                    value={heureCourte(template.heure)}
+                    onChange={(e) => changerHeure(template, e.target.value)}
+                    disabled={enCours}
+                  />
+                </label>
+
+                {template.heure && (
+                  <label className="gestion-champ">
+                    {T.reglages.champHeureExterieur}
+                    <input
+                      type="time"
+                      value={heureCourte(template.heure_exterieur)}
+                      onChange={(e) => changerHeureExterieur(template, e.target.value)}
+                      disabled={enCours}
+                    />
+                  </label>
+                )}
 
                 <p className="gestion-recurrence">
                   <span className="gestion-badge-recurrence">
